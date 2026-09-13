@@ -16,7 +16,7 @@
 :root{
   --bg:#0a0a0a;--bg2:#141414;--bg3:#1e1e1e;--bg4:#282828;
   --line:#2a2a2a;--line2:#333;
-  --text:#f0f0f0;--text2:#aaa;--text3:#666;
+  --text:#f0f0f0;--text2:#bbb;--text3:#8a8f98;
   --accent:#1565C0;--accent2:#1E88E5;--accent-dim:rgba(21,101,192,.15);
   --green:#2ecc71;--green-dim:rgba(46,204,113,.12);
   --red:#e74c3c;--red-dim:rgba(231,76,60,.12);
@@ -214,7 +214,7 @@ async function syncFromCloud(){
   // Rebuild DB from cloud data
   const teamMap={};
   (d.equipos||[]).forEach(eq=>{
-    teamMap[eq.id]={id:eq.id,name:eq.nombre,category:eq.categoria,coachCode:eq.claveEntrenador,directorCode:eq.claveDirector,coachName:eq.coachName||'',players:[],trainingSessions:{},games:[],trainingDays:{},extraGames:[]};
+    teamMap[eq.id]={id:eq.id,name:eq.nombre,category:eq.categoria,coachCode:eq.claveEntrenador,directorCode:eq.claveDirector,coachName:eq.coachName||'',coach1:eq.coach1||'',coach2:eq.coach2||'',players:[],trainingSessions:{},games:[],trainingDays:{},extraGames:[]};
   });
   (d.jugadores||[]).forEach(j=>{
     if(!teamMap[j.equipoId])return;
@@ -241,6 +241,7 @@ async function syncFromCloud(){
     if(teamMap[g.equipoId])teamMap[g.equipoId].games.push(g);
   });
   DB.teams=Object.values(teamMap);
+  if(d.entrenadores)DB.coaches=_hydrateCoaches(d.entrenadores);
   saveDB(DB);
   // Status updated by init() after render
   return true;
@@ -248,7 +249,7 @@ async function syncFromCloud(){
 
 // ── Sync wrappers for write operations ──
 async function syncCrearEquipo(team){
-  await gsPost({action:'crearEquipo',id:team.id,nombre:team.name,categoria:team.category,claveEntrenador:team.coachCode,claveDirector:team.directorCode});
+  await gsPost({action:'crearEquipo',id:team.id,nombre:team.name,categoria:team.category,claveEntrenador:team.coachCode,claveDirector:team.directorCode,coach1:team.coach1||'',coach2:team.coach2||''});
 }
 async function syncGuardarJugador(equipoId,p){
   await gsPost({action:'guardarJugador',id:p.id,equipoId:equipoId,nombre:p.name,dorsal:p.dorsal,anioNacimiento:p.birthYear,telefono:p.phone,email:p.email});
@@ -297,6 +298,26 @@ function _getLocalPhoto(pid){
     }
   }catch(e){}
   return'';
+}
+function _getLocalCoachPhoto(cid){
+  try{
+    const localDB=JSON.parse(localStorage.getItem('cbb_v4_cache')||'{}');
+    const c=(localDB.coaches||[]).find(x=>x.id===cid);
+    return (c&&c.photo)?c.photo:'';
+  }catch(e){return'';}
+}
+function _hydrateCoaches(entrenadoresArr){
+  return (entrenadoresArr||[]).map(function(e){
+    return {
+      id:e.id,
+      name:e.nombre,
+      phone:e.telefono||'',
+      email:e.email||'',
+      password:e.password||'',
+      teams:(e.teams||'').split(',').filter(function(x){return x;}),
+      photo:e.photoUrl||_getLocalCoachPhoto(e.id)||''
+    };
+  });
 }
 function normDate(d){if(!d)return'';const s=String(d);return s.slice(0,10);}
 function codeLabel(c){const f=CODES.find(x=>x.c===c);return f?f.l:c;}
@@ -592,7 +613,16 @@ function renderSetup(app){
   $('#crBtn').onclick=()=>{const n=$('#sN').value.trim();if(!n)return toast('Nombre obligatorio');
     if(DB.teams.some(function(t){return t.name.toLowerCase()===n.toLowerCase();})){toast('Ya existe un equipo con ese nombre');return;}
     const c1=$('#sC1').value.trim(),c2=$('#sC2').value.trim();if(!c1||!c2)return toast('Establece ambas claves');const coachName='';
-    const coach1=$('#sCoach1').value.trim(),coach2=$('#sCoach2').value.trim();const team={id:gid(),name:n,category:$('#sC').value,coachCode:c1,directorCode:c2,coachName:coachName,coach1:coach1,coach2:coach2,players:[],trainingSessions:{},games:[],extraGames:[],trainingDays:{}};DB.teams.push(team);saveDB(DB);syncCrearEquipo(team);S.view=S.role?'teamlist':'login';S.teamListData=DB.teams;render();toast('Equipo creado');};
+    const coach1=$('#sCoach1').value.trim(),coach2=$('#sCoach2').value.trim();const team={id:gid(),name:n,category:$('#sC').value,coachCode:c1,directorCode:c2,coachName:coachName,coach1:coach1,coach2:coach2,players:[],trainingSessions:{},games:[],extraGames:[],trainingDays:{}};DB.teams.push(team);
+    if(!DB.coaches)DB.coaches=[];
+    [coach1,coach2].filter(function(nm){return nm;}).forEach(function(nm){
+      var existingCoach=DB.coaches.find(function(c){return c.name.toLowerCase()===nm.toLowerCase();});
+      var coachObj;
+      if(existingCoach){if((existingCoach.teams||[]).indexOf(team.id)<0)existingCoach.teams.push(team.id);coachObj=existingCoach;}
+      else{coachObj={id:gid(),name:nm,phone:'',email:'',photo:'',teams:[team.id],password:''};DB.coaches.push(coachObj);}
+      gsPost({action:'guardarEntrenador',id:coachObj.id,nombre:coachObj.name,telefono:coachObj.phone,email:coachObj.email,password:coachObj.password,teams:coachObj.teams});
+    });
+    saveDB(DB);syncCrearEquipo(team);S.view=S.role?'teamlist':'login';S.teamListData=DB.teams;render();toast('Equipo creado');};
 }
 
 function renderMain(app){
@@ -1660,7 +1690,7 @@ window.showCoachPanel=function(){
     coachList+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);">'+
       '<div style="width:40px;height:40px;border-radius:50%;background:var(--bg4);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">'+(c.photo?'<img src="'+c.photo+'" style="width:100%;height:100%;object-fit:cover;">':'<span style="font-size:12px;color:var(--text3);">'+c.name.charAt(0)+'</span>')+'</div>'+
       '<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:12px;">'+c.name+'</div><div style="font-size:10px;color:var(--text3);">'+(teamNames||'Sin equipo')+'</div></div>'+
-      '<button class="btn btn-outline btn-sm" style="font-size:9px;" data-editcoach="'+c.id+'">Editar</button>'+
+      '<button class="btn btn-outline btn-sm" style="font-size:9px;" data-editcoach="'+c.id+'">Modificar</button>'+
       '<button class="btn btn-danger btn-sm" style="font-size:9px;padding:4px 6px;" data-delcoach="'+c.id+'">X</button>'+
       '</div>';
   });
@@ -1690,40 +1720,73 @@ window.editCoach=function(cid){
     '<div class="form-group"><label>Email</label><input id="cEmail" value="'+(c?c.email||'':'')+'"></div></div>'+
     '<div class="form-group"><label>Contrasena de acceso (para entrar como Entrenador)</label><input id="cPwd" value="'+(c?c.password||'':'')+'" placeholder="Restablecer/asignar clave"></div>'+
     '<div class="form-group"><label>Equipos que entrena (max. 4)</label><div id="coachTeams" style="max-height:120px;overflow-y:auto;border:1px solid var(--line2);border-radius:6px;padding:6px;">'+teamCheckboxes+'</div></div>'+
-    '<div class="form-group"><label>Foto</label><div style="display:flex;gap:6px;align-items:center;">'+
-    '<div id="coachPhotoPreview" style="width:60px;height:60px;border-radius:8px;background:var(--bg4);overflow:hidden;display:flex;align-items:center;justify-content:center;">'+(c&&c.photo?'<img src="'+c.photo+'" style="width:100%;height:100%;object-fit:cover;">':'<span style="font-size:9px;color:var(--text3);">Sin foto</span>')+'</div>'+
-    '<input type="file" id="coachPhotoInput" accept="image/*" style="display:none;">'+
-    '<button class="btn btn-outline btn-sm" style="font-size:9px;" id="choosePhotoBtn">Elegir foto</button>'+
-    '</div></div>'+
+    '<div class="form-group"><label>Foto</label><div style="display:flex;gap:10px;align-items:flex-start;">'+
+    '<div id="coachPhotoPreview" style="width:90px;height:100px;border-radius:10px;background:var(--bg4);border:2px dashed var(--line2);overflow:hidden;display:flex;align-items:center;justify-content:center;">'+(c&&c.photo?'<img src="'+c.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">':'<span style="font-size:9px;color:var(--text3);text-align:center;">Sin foto</span>')+'</div>'+
+    '<div style="display:flex;flex-direction:column;gap:4px;">'+
+    '<input type="file" id="coachPhotoCam" accept="image/*" capture style="display:none;">'+
+    '<input type="file" id="coachPhotoGal" accept="image/*" style="display:none;">'+
+    '<button class="btn btn-outline btn-sm" style="font-size:9px;" id="coachCamBtn">Camara</button>'+
+    '<button class="btn btn-outline btn-sm" style="font-size:9px;" id="coachGalBtn">Galeria</button>'+
+    '</div></div></div>'+
     '<input type="hidden" id="coachPhotoData" value="'+(c&&c.photo?c.photo:'')+'">'+
     '<div style="display:flex;gap:8px;margin-top:14px;"><button class="btn btn-primary btn-block" id="saveCoachBtn">Guardar</button>'+
     '<button class="btn btn-outline" id="cancelCoachBtn">Cancelar</button></div></div>';
   document.body.appendChild(bg);
   bg.onclick=function(e){if(e.target===bg)bg.remove();};
-  bg.querySelector('#choosePhotoBtn').onclick=function(){bg.querySelector('#coachPhotoInput').click();};
-  bg.querySelector('#coachPhotoInput').onchange=function(){handleCoachPhoto(this);};
+  bg.querySelector('#coachCamBtn').onclick=function(){event.preventDefault();bg.querySelector('#coachPhotoCam').value='';bg.querySelector('#coachPhotoCam').click();};
+  bg.querySelector('#coachGalBtn').onclick=function(){event.preventDefault();bg.querySelector('#coachPhotoGal').value='';bg.querySelector('#coachPhotoGal').click();};
+  bg.querySelector('#coachPhotoCam').onchange=function(){handleCoachPhoto(this,cid);};
+  bg.querySelector('#coachPhotoGal').onchange=function(){handleCoachPhoto(this,cid);};
   bg.querySelector('#cancelCoachBtn').onclick=function(){bg.remove();showCoachPanel();};
   bg.querySelector('#saveCoachBtn').onclick=function(){saveCoach(cid);};
 };
 
-window.handleCoachPhoto=function(input){
-  var file=input.files[0];if(!file)return;
+window.handleCoachPhoto=function(input,cid){
+  var file=input.files[0];
+  if(!file){toast('No se recibio la foto');return;}
+  if(file.size>10000000){toast('Foto demasiado grande, usa galeria');return;}
   var reader=new FileReader();
   reader.onload=function(e){
     var img=new Image();
     img.onload=function(){
       var canvas=document.createElement('canvas');
-      var size=200;canvas.width=size;canvas.height=size;
+      var size=300;canvas.width=size;canvas.height=size;
       var ctx=canvas.getContext('2d');
       var min=Math.min(img.width,img.height);
       var sx=(img.width-min)/2,sy=(img.height-min)/2;
       ctx.drawImage(img,sx,sy,min,min,0,0,size,size);
-      var dataUrl=canvas.toDataURL('image/jpeg',0.85);
-      document.getElementById('coachPhotoData').value=dataUrl;
-      document.getElementById('coachPhotoPreview').innerHTML='<img src="'+dataUrl+'" style="width:100%;height:100%;object-fit:cover;">';
+      var dataUrl=canvas.toDataURL('image/jpeg',0.9);
+      // Guardar en el campo oculto del formulario (para cuando se pulse Guardar)
+      var dataField=document.getElementById('coachPhotoData');
+      if(dataField)dataField.value=dataUrl;
+      var preview=document.getElementById('coachPhotoPreview');
+      if(preview)preview.innerHTML='<img src="'+dataUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';
+      toast('Foto guardada');
+      // Si el entrenador ya existe (cid), guardar y subir a Drive inmediatamente
+      if(cid){
+        var c=(DB.coaches||[]).find(function(x){return x.id===cid;});
+        if(c){
+          c.photo=dataUrl;
+          saveDB(DB);
+          gsPost({action:'subirFotoEntrenador',id:c.id,nombre:c.name,photo:dataUrl}).then(function(res){
+            if(res.ok&&res.photoUrl){
+              c.photo=res.photoUrl;
+              saveDB(DB);
+              if(preview)preview.innerHTML='<img src="'+res.photoUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';
+              toast('Foto subida a Drive');
+            } else {
+              toast('Guardada en el movil (no se pudo subir: '+(res.error||'sin respuesta')+')');
+            }
+          }).catch(function(err){
+            toast('Guardada en el movil (sin conexion para subir)');
+          });
+        }
+      }
     };
+    img.onerror=function(){toast('Error al cargar la imagen');};
     img.src=e.target.result;
   };
+  reader.onerror=function(){toast('Error al leer el archivo');};
   reader.readAsDataURL(file);
 };
 
@@ -1739,11 +1802,13 @@ window.saveCoach=function(cid){
   document.querySelectorAll('.coachTeamCb:checked').forEach(function(cb){teams.push(cb.value);});
   if(teams.length>4){toast('Maximo 4 equipos');return;}
   if(!DB.coaches)DB.coaches=[];
+  var savedCoach;
   if(cid){
     var c=DB.coaches.find(function(x){return x.id===cid;});
-    if(c){c.name=name;c.phone=phone;c.email=email;c.photo=photo;c.teams=teams;c.password=password;}
+    if(c){c.name=name;c.phone=phone;c.email=email;c.photo=photo;c.teams=teams;c.password=password;savedCoach=c;}
   } else {
-    DB.coaches.push({id:gid(),name:name,phone:phone,email:email,photo:photo,teams:teams,password:password});
+    savedCoach={id:gid(),name:name,phone:phone,email:email,photo:photo,teams:teams,password:password};
+    DB.coaches.push(savedCoach);
   }
   saveDB(DB);
   DB.teams.forEach(function(t){
@@ -1751,6 +1816,9 @@ window.saveCoach=function(cid){
     if(coach)t.coachName=coach.name;
   });
   saveDB(DB);
+  gsPost({action:'guardarEntrenador',id:savedCoach.id,nombre:savedCoach.name,telefono:savedCoach.phone,email:savedCoach.email,password:savedCoach.password,teams:savedCoach.teams}).then(function(res){
+    console.log('Entrenador sincronizado:',res);
+  });
   document.querySelector('.modal-bg').remove();
   showCoachPanel();
   toast(cid?'Entrenador actualizado':'Entrenador anadido');
@@ -1760,6 +1828,9 @@ window.deleteCoach=function(cid){
   if(!confirm('Eliminar este entrenador?'))return;
   DB.coaches=DB.coaches.filter(function(c){return c.id!==cid;});
   saveDB(DB);
+  gsPost({action:'eliminarEntrenador',id:cid}).then(function(res){
+    console.log('Entrenador eliminado en la nube:',res);
+  });
   document.querySelector('.modal-bg').remove();
   showCoachPanel();
   toast('Entrenador eliminado');
@@ -1966,7 +2037,7 @@ window.showTeamManager=function(){
     var coach2b=(DB.coaches||[]).find(function(c){return(c.teams||[]).indexOf(t.id)>=0;});
     var c1c2b=[t.coach1,t.coach2].filter(function(x){return x;}).join(' / ');
     var cn=(coach2b&&coach2b.name)?coach2b.name:(c1c2b||'Sin entrenador');
-    teamList+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);"><div><div style="font-weight:600;font-size:12px;">'+t.name+'</div><div style="font-size:10px;color:var(--text3);">'+t.category+' - '+cn+' - '+t.players.length+' jug.</div></div><div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;"><button class="btn btn-primary btn-sm" style="font-size:9px;" data-viewtid="'+t.id+'">Ver</button><button class="btn btn-outline btn-sm" style="font-size:9px;" data-edittid="'+t.id+'">Modificar</button><button class="btn btn-danger btn-sm" style="font-size:9px;" data-tid="'+t.id+'">Eliminar</button></div></div>';
+    teamList+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);"><div><div style="font-weight:600;font-size:12px;">'+t.name+'</div><div style="font-size:11px;color:var(--text2);">'+cn+' - '+t.players.length+' jugadores</div></div><div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;"><button class="btn btn-primary btn-sm" style="font-size:9px;" data-viewtid="'+t.id+'">Ver</button><button class="btn btn-outline btn-sm" style="font-size:9px;" data-edittid="'+t.id+'">Modificar</button><button class="btn btn-danger btn-sm" style="font-size:9px;" data-tid="'+t.id+'">Eliminar</button></div></div>';
   });
   bg.innerHTML='<div class="modal"><h3>Equipos del club</h3><div id="teamMgrList">'+(teamList||'<div style="color:var(--text3);text-align:center;padding:12px;">Sin equipos</div>')+'</div><button class="btn btn-outline btn-block" style="margin-top:12px;" id="closeTeamMgr">Cerrar</button></div>';
   document.body.appendChild(bg);
@@ -2169,7 +2240,7 @@ async function init(){
         // Rebuild DB
         const teamMap={};
         (res.data.equipos||[]).forEach(eq=>{
-          teamMap[eq.id]={id:eq.id,name:eq.nombre,category:eq.categoria,coachCode:eq.claveEntrenador,directorCode:eq.claveDirector,coachName:eq.coachName||'',players:[],trainingSessions:{},games:[],trainingDays:{}};
+          teamMap[eq.id]={id:eq.id,name:eq.nombre,category:eq.categoria,coachCode:eq.claveEntrenador,directorCode:eq.claveDirector,coachName:eq.coachName||'',coach1:eq.coach1||'',coach2:eq.coach2||'',players:[],trainingSessions:{},games:[],trainingDays:{}};
         });
         // If Equipos sheet is empty but we have jugadores, auto-create teams
         const allEquipoIds=new Set();
@@ -2202,6 +2273,7 @@ async function init(){
           if(teamMap[g.equipoId])teamMap[g.equipoId].games.push(g);
         });
         DB.teams=Object.values(teamMap);
+        if(res.data.entrenadores)DB.coaches=_hydrateCoaches(res.data.entrenadores);
         saveDB(DB);
         const _savedSel=document.getElementById('selTeam')?.value||'';
         render();
