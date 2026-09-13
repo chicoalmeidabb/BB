@@ -138,13 +138,26 @@ option{background:var(--bg3);}
 <body>
 <div id="app"></div>
 <script>
+let _deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  _deferredInstallPrompt=e;
+  var btn=document.getElementById('installAppBtn');
+  if(btn)btn.style.display='block';
+});
+window.addEventListener('appinstalled',function(){
+  _deferredInstallPrompt=null;
+  var btn=document.getElementById('installAppBtn');
+  if(btn)btn.style.display='none';
+  toast('App instalada correctamente');
+});
 const LOGO_URL='https://www.baloncestobadajoz.es/archivos/imagenes/logo.png';
 
 const CONFIG_ADMIN_PASSWORD = '144';
 // ══════════════════════════════════════════════════════════
 // CONFIGURACIÓN — Pega aquí la URL de tu Google Apps Script
 // ══════════════════════════════════════════════════════════
-const CONFIG_URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbwqc_4H64Z2O7yGfHq56B8aRJRMSADa60a8yj_RmBk__qd42wtOL87ddawEmXQDnsU4hA/exec";
+const CONFIG_URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbwD3ErVsz7tg2oEy5-IsHen_tT5K-ayr3jUX_jEcwR0zQ-T0ucWKf1XtZtFUpsU0j0ElQ/exec";
 // ══════════════════════════════════════════════════════════
 
 const DB_KEY='cbb_v4_cache';
@@ -432,7 +445,7 @@ function renderLogin(app){
     '<button class="btn btn-outline btn-block" style="padding:10px 14px;font-size:15px;border-color:#e67e22;color:#e67e22;display:flex;align-items:center;justify-content:center;gap:8px;" id="btnSchools"><img src="'+ESCUELAS_LOGO+'" style="height:26px;border-radius:4px;">Escuelas</button>'+
     '<button class="btn btn-outline btn-block" style="padding:14px;font-size:15px;border-color:var(--accent);color:var(--accent);" id="btnAdmin">⚙️ Coordinadores</button>'+
     '</div>'+
-    '<div id="syncStatus" style="margin-top:16px;font-size:11px;color:var(--text3);">Conectando con la base de datos...</div>'+
+    '<div id="syncStatus" style="margin-top:16px;font-size:11px;color:var(--text3);">Conectando con la base de datos...</div>'+'<button id="installAppBtn" style="display:none;margin-top:14px;background:var(--bg3);border:1px solid var(--line2);color:var(--text);padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;width:100%;">Instalar aplicacion</button>'+
     '<div style="margin-top:20px;font-size:10px;color:var(--text3);font-style:italic;">Creado por Chico Almeida</div>';
   app.appendChild(s);
 
@@ -483,6 +496,20 @@ function renderLogin(app){
       setTimeout(function(){openAdminMenu();},50);
     });
   };
+
+  var installBtn=s.querySelector('#installAppBtn');
+  if(installBtn){
+    if(_deferredInstallPrompt) installBtn.style.display='block';
+    installBtn.onclick=function(){
+      if(!_deferredInstallPrompt){toast('Usa el menu del navegador para anadir a pantalla de inicio');return;}
+      _deferredInstallPrompt.prompt();
+      _deferredInstallPrompt.userChoice.then(function(choice){
+        if(choice.outcome==='accepted'){toast('Instalando...');}
+        _deferredInstallPrompt=null;
+        installBtn.style.display='none';
+      });
+    };
+  }
 }
 
 function renderTeamList(app){
@@ -1899,7 +1926,7 @@ window.showTeamManager=function(){
     var coach2b=(DB.coaches||[]).find(function(c){return(c.teams||[]).indexOf(t.id)>=0;});
     var c1c2b=[t.coach1,t.coach2].filter(function(x){return x;}).join(' / ');
     var cn=(coach2b&&coach2b.name)?coach2b.name:(c1c2b||'Sin entrenador');
-    teamList+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);"><div><div style="font-weight:600;font-size:12px;">'+t.name+'</div><div style="font-size:10px;color:var(--text3);">'+t.category+' - '+cn+' - '+t.players.length+' jug.</div></div><div style="display:flex;gap:4px;"><button class="btn btn-outline btn-sm" style="font-size:9px;" data-edittid="'+t.id+'">Modificar</button><button class="btn btn-danger btn-sm" style="font-size:9px;" data-tid="'+t.id+'">Eliminar</button></div></div>';
+    teamList+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);"><div><div style="font-weight:600;font-size:12px;">'+t.name+'</div><div style="font-size:10px;color:var(--text3);">'+t.category+' - '+cn+' - '+t.players.length+' jug.</div></div><div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;"><button class="btn btn-primary btn-sm" style="font-size:9px;" data-viewtid="'+t.id+'">Ver</button><button class="btn btn-outline btn-sm" style="font-size:9px;" data-edittid="'+t.id+'">Modificar</button><button class="btn btn-danger btn-sm" style="font-size:9px;" data-tid="'+t.id+'">Eliminar</button></div></div>';
   });
   bg.innerHTML='<div class="modal"><h3>Equipos del club</h3><div id="teamMgrList">'+(teamList||'<div style="color:var(--text3);text-align:center;padding:12px;">Sin equipos</div>')+'</div><button class="btn btn-outline btn-block" style="margin-top:12px;" id="closeTeamMgr">Cerrar</button></div>';
   document.body.appendChild(bg);
@@ -1920,6 +1947,13 @@ window.showTeamManager=function(){
       var tid=btn.dataset.edittid;
       bg.remove();
       editTeamFromAdmin(tid);
+    };
+  });
+  bg.querySelectorAll('[data-viewtid]').forEach(function(btn){
+    btn.onclick=function(){
+      var tid=btn.dataset.viewtid;
+      bg.remove();
+      S.team=tid;S.view='main';S.sub='attendance';render();
     };
   });
 };
