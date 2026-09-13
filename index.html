@@ -288,6 +288,17 @@ const HOLIDAYS=new Set([
 '2027-12-06','2027-12-08','2027-12-25'
 ]);
 const CODES=[{c:'1',l:'Entrenó'},{c:'D',l:'Dobla'},{c:'I',l:'Otro equipo'},{c:'T',l:'Tecnif+Entreno'},{c:'t',l:'Solo tecnif.'},{c:'J',l:'Justificada'},{c:'B',l:'Baja/lesión'},{c:'E',l:'Enfermedad'},{c:'C',l:'Clase'},{c:'O',l:'No avisó'},{c:'P',l:'Partido'},{c:'',l:'Borrar'}];
+window.showPhotoLightbox=function(photoUrl,name){
+  var bg=el('div','modal-bg active');
+  bg.style.background='rgba(0,0,0,.85)';
+  bg.innerHTML='<div style="max-width:280px;width:90%;text-align:center;" onclick="event.stopPropagation();">'+
+    '<img src="'+photoUrl+'" style="width:100%;max-height:70vh;object-fit:contain;border-radius:12px;background:var(--bg3);">'+
+    '<div style="color:#fff;font-weight:700;margin-top:10px;font-size:14px;">'+(name||'')+'</div>'+
+    '</div>';
+  document.body.appendChild(bg);
+  bg.onclick=function(){bg.remove();};
+};
+
 function _getLocalPhoto(pid){
   try{
     const localDB=JSON.parse(localStorage.getItem('cbb_v4_cache')||'{}');
@@ -705,12 +716,15 @@ function rPlayers(c){
     var d=el('div','');
     d.style.cssText='display:grid;grid-template-columns:1fr 32px 28px 28px 32px;gap:2px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer;font-size:11px;';
     var nameStr=p.name.split(' ').slice(0,2).join(' ');
-    d.innerHTML='<div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:var(--text3);margin-right:3px;">'+p.dorsal+'</span>'+nameStr+'</div>'+
+    var thumbHtml=p.photo?'<img src="'+p.photo+'" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;" data-photobtn="'+p.id+'">':'<div style="width:22px;height:22px;border-radius:50%;background:var(--bg4);flex-shrink:0;"></div>';
+    d.innerHTML='<div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;">'+thumbHtml+'<span><span style="color:var(--text3);margin-right:3px;">'+p.dorsal+'</span>'+nameStr+'</span></div>'+
       '<div style="text-align:center;font-weight:700;color:var(--green);">'+(entrenos||'')+'</div>'+
       '<div style="text-align:center;font-weight:700;">'+(totalGames||'')+'</div>'+
       '<div style="text-align:center;font-weight:700;color:#8e44ad;">'+(tec||'')+'</div>'+
       '<div style="text-align:center;font-weight:700;color:var(--red);">'+(faltas||'')+'</div>';
     d.onclick=function(){S.selPlayer=p.id;S.sub='playerDetail';rc();};
+    var thumbEl=d.querySelector('[data-photobtn]');
+    if(thumbEl)thumbEl.onclick=function(e){e.stopPropagation();showPhotoLightbox(p.photo,p.name);};
     hdr.appendChild(d);
   });c.appendChild(hdr);
   $('#addP').onclick=()=>showPM();
@@ -887,10 +901,13 @@ function rAttendance(c){
     grid.appendChild(h);
   });
   t.players.sort((a,b)=>a.dorsal-b.dorsal).forEach(p=>{
-    const nameCell=el('div','cal-name',`<span style="color:#fff;margin-right:4px;font-size:10px;font-weight:800;">${p.dorsal}</span>${p.name.split(' ').slice(0,2).join(' ')}`);
+    const thumbHtml2=p.photo?`<img src="${p.photo}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-right:3px;" data-photobtn2="${p.id}">`:'';
+    const nameCell=el('div','cal-name',`<span style="display:flex;align-items:center;">${thumbHtml2}<span style="color:#fff;margin-right:4px;font-size:10px;font-weight:800;">${p.dorsal}</span>${p.name.split(' ').slice(0,2).join(' ')}</span>`);
     nameCell.style.cursor='pointer';
     nameCell.onclick=()=>{S.selPlayer=p.id;S.sub='playerDetail';S.fromAttendance=true;rc();};
     grid.appendChild(nameCell);
+    const thumbEl2=nameCell.querySelector('[data-photobtn2]');
+    if(thumbEl2)thumbEl2.onclick=(e)=>{e.stopPropagation();showPhotoLightbox(p.photo,p.name);};
     days.forEach(d=>{const dstr=ds(d);const sess=t.trainingSessions[dstr]||{};const v=sess[p.id]||'';const cell=el('div','cal-cell');const codes=String(v).split(',').filter(x=>x);
       if(codes.length>1){cell.innerHTML=codes.map(c=>c==='P'?'🏀':'<span>'+c+'</span>').join('');cell.style.fontSize='8px';cell.style.lineHeight='1.1';}
       else{cell.textContent=v==='P'?'🏀':v;}
