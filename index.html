@@ -397,7 +397,7 @@ function generateReport(type){
 
   const totalDays=Object.keys(team.trainingSessions).length;
 
-  if(type==='team'||type==='individual'){
+  if(type==='team'){
     html+='<h2>Resumen del equipo</h2>';
     html+=`<div class="kpi"><div class="v">${team.players.length}</div><div class="l">Jugadores</div></div>`;
     html+=`<div class="kpi"><div class="v">${totalDays}</div><div class="l">Días registrados</div></div>`;
@@ -406,7 +406,7 @@ function generateReport(type){
     html+=`<div class="kpi"><div class="v">${avgAtt}%</div><div class="l">Asistencia media</div></div>`;
   }
 
-  if(type==='team'||type==='individual'){
+  if(type==='team'){
     html+='<h2>Asistencia por jugador</h2>';
     html+='<table><tr><th>Dorsal</th><th>Jugador</th><th>% Asist.</th><th>Con equipo</th><th>Partidos</th><th>Puntos</th><th>No avisó</th><th>Lesión</th></tr>';
     team.players.sort((a,b)=>a.dorsal-b.dorsal).forEach(p=>{
@@ -417,7 +417,10 @@ function generateReport(type){
   }
 
   if(type==='individual'){
-    team.players.sort((a,b)=>a.dorsal-b.dorsal).forEach(p=>{
+    if(!S.repPlayer){toast('Elige primero una jugadora en Individual');return;}
+    const p=team.players.find(x=>x.id===S.repPlayer);
+    if(!p){toast('Jugadora no encontrada');return;}
+    [p].forEach(p=>{
       const a=calcAtt(team,p.id);
       const gt=_playerGameTotals(team,p);
       const noEntrena=Math.max(a.teamDays-a.wTeam,0);
@@ -435,6 +438,16 @@ function generateReport(type){
       html+=`<tr><td>Partidos</td><td>${gt.count}</td></tr>`;
       html+=`<tr><td>Minutos jugados</td><td>${tMin}:${String(tSec).padStart(2,'0')}</td></tr>`;
       html+=`<tr><td>Puntos anotados</td><td>${gt.totalPts}</td></tr>`;
+      const es=_playerExtraStatsTotals(team,p);
+      if(es.p2a+es.p3a+es.p1a+es.reb+es.stl+es.blk>0){
+        const p2pct=es.p2a?Math.round(es.p2m/es.p2a*100):0,p3pct=es.p3a?Math.round(es.p3m/es.p3a*100):0,p1pct=es.p1a?Math.round(es.p1m/es.p1a*100):0;
+        html+=`<tr><td>Tiros de 2</td><td>${es.p2m}/${es.p2a} (${p2pct}%)</td></tr>`;
+        html+=`<tr><td>Tiros de 3</td><td>${es.p3m}/${es.p3a} (${p3pct}%)</td></tr>`;
+        html+=`<tr><td>Tiros libres</td><td>${es.p1m}/${es.p1a} (${p1pct}%)</td></tr>`;
+        html+=`<tr><td>Rebotes totales</td><td>${es.reb}</td></tr>`;
+        html+=`<tr><td>Recuperaciones</td><td>${es.stl}</td></tr>`;
+        html+=`<tr><td>Tapones</td><td>${es.blk}</td></tr>`;
+      }
       CODES.filter(c=>c.c&&c.c!=='1'&&a.bk[c.c]>0).forEach(c=>{
         html+=`<tr><td>${c.l} (${c.c})</td><td>${a.bk[c.c]}</td></tr>`;
       });
@@ -1050,12 +1063,12 @@ function showGM(eid){
     <div class="form-row"><div class="form-group"><label>Fecha</label><input id="gD" type="date" value="${g?g.date:ds(new Date())}"></div><div class="form-group"><label>Rival</label><input id="gO" value="${g?g.opponent:''}"></div></div>
     <div class="form-group"><label>Puntos del rival</label><input id="gRivPts" type="number" placeholder="Puntos rival" value="${g?g.rivalPoints||0:0}" style="width:120px;"></div>
     <div class="section-title">Jugadores (tiempo: 1530 = 15min 30seg)</div><div id="gpR">
-    ${(g?g.players:t.players.map(p=>({playerId:p.id,minutes:'',points:0}))).map(gp=>{const pl=t.players.find(x=>x.id===gp.playerId);return pl?`<div class="report-row" style="align-items:center;padding:8px 0;"><span style="font-size:11px;font-weight:600;">#${pl.dorsal} ${pl.name.split(' ')[0]}</span><span style="display:flex;gap:4px;"><input style="width:55px;padding:5px;font-size:11px;" placeholder="1530" value="${gp.minutes||''}" data-pid="${gp.playerId}" class="gM"><input style="width:45px;padding:5px;font-size:11px;" type="number" placeholder="Pts" value="${gp.points||''}" data-pid="${gp.playerId}" class="gP"></span></div>`:''}).join('')}
+    ${(g?g.players:t.players.map(p=>({playerId:p.id,minutes:'',points:0}))).map(gp=>{const pl=t.players.find(x=>x.id===gp.playerId);if(!pl)return'';const th=pl.photo?'<img src="'+pl.photo+'" style="width:22px;height:22px;border-radius:50%;object-fit:cover;margin-right:6px;">':'<span class="avatar" style="width:22px;height:22px;font-size:9px;margin-right:6px;">'+ini(pl.name)+'</span>';return`<div class="report-row" style="align-items:center;padding:8px 0;"><span style="font-size:11px;font-weight:600;display:flex;align-items:center;">${th}#${pl.dorsal} ${pl.name}</span><span style="display:flex;gap:4px;"><input style="width:55px;padding:5px;font-size:11px;" placeholder="1530" value="${gp.minutes||''}" data-pid="${gp.playerId}" class="gM"><input style="width:45px;padding:5px;font-size:11px;" type="number" placeholder="Pts" value="${gp.points||''}" data-pid="${gp.playerId}" class="gP"></span></div>`;}).join('')}
     </div><div style="display:flex;gap:8px;margin-top:14px;"><button class="btn btn-primary btn-block" id="gS">Guardar</button><button class="btn btn-outline" id="gC">Cancelar</button></div></div>`;
   document.body.appendChild(bg);bg.onclick=e=>{if(e.target===bg)bg.remove();};$('#gC',bg).onclick=()=>bg.remove();
   $('#gS',bg).onclick=()=>{const date=$('#gD',bg).value,opp=$('#gO',bg).value.trim();if(!date||!opp)return toast('Fecha y rival obligatorios');
     const rivPts=parseInt($('#gRivPts',bg).value)||0;
-    const pls=$$('.gM',bg).map(el=>{const pts=parseInt($$('.gP',bg).find(p=>p.dataset.pid===el.dataset.pid)?.value)||0;return{playerId:el.dataset.pid,minutes:el.value,points:pts};}).filter(p=>p.minutes||p.points);
+    const pls=$$('.gM',bg).map(el=>{const pts=parseInt($$('.gP',bg).find(p=>p.dataset.pid===el.dataset.pid)?.value)||0;const prev=g?g.players.find(x=>x.playerId===el.dataset.pid):null;const out={playerId:el.dataset.pid,minutes:el.value,points:pts};if(prev&&prev.stats)out.stats=prev.stats;return out;}).filter(p=>p.minutes||p.points);
     if(g){g.date=date;g.opponent=opp;g.players=pls;g.rivalPoints=rivPts;syncGuardarPartido(t.id,g);}else{const ng={id:gid(),date,opponent:opp,players:pls,rivalPoints:rivPts};t.games.push(ng);syncGuardarPartido(t.id,ng);}
     pls.forEach(gp=>{if(!t.trainingSessions[date])t.trainingSessions[date]={};t.trainingSessions[date][gp.playerId]='P';const pl=t.players.find(x=>x.id===gp.playerId);syncAsistencia(date,t.id,gp.playerId,pl?pl.name:'',pl?pl.dorsal:'','P');});
     saveDB(DB);bg.remove();rc();toast('Guardado');};
@@ -1064,6 +1077,10 @@ window.showGM=showGM;
 window.delG=id=>{if(!confirm('¿Eliminar?'))return;syncEliminarPartido(id);T().games=T().games.filter(g=>g.id!==id);saveDB(DB);rc();};
 
 function normalizeImportDate(s){
+  if(typeof s==='number'){
+    const d=new Date(Date.UTC(1899,11,30)+Math.round(s)*86400000);
+    return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+  }
   s=String(s||'').trim();if(!s)return'';
   let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
@@ -1086,6 +1103,36 @@ function processGameRows(rows,bg){
   saveDB(DB);
   $('#iPrev',bg).innerHTML=`<div style="color:var(--green);font-weight:600;font-size:12px;">${Object.keys(gm).length} partidos importados, ${imp} registros.</div>`;
   rc();
+}
+function febNum(v){
+  if(v===null||v===undefined||v==='')return 0;
+  if(typeof v==='number')return Math.round(v);
+  const n=parseInt(String(v).replace(/[^0-9\-]/g,''),10);
+  return isNaN(n)?0:n;
+}
+function febMinStr(v){
+  if(v===null||v===undefined||v==='')return'';
+  if(typeof v==='number'){
+    // Excel time-of-day serial value (fraction of a day)
+    const totalSeconds=Math.round(v*86400);
+    if(totalSeconds<=0)return'00:00';
+    const m=Math.floor(totalSeconds/60),s=totalSeconds%60;
+    return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  }
+  const s=String(v).trim();
+  let m=s.match(/^(\d{1,3}):(\d{2})/);
+  if(m)return m[1].padStart(2,'0')+':'+m[2];
+  m=s.match(/T(\d{2}):(\d{2})/); // garbled ISO datetime fallback
+  if(m)return m[1]+':'+m[2];
+  m=s.match(/(\d{1,3})[.:](\d{2})\s*$/);
+  if(m)return m[1].padStart(2,'0')+':'+m[2];
+  return s;
+}
+function febFrac(v){
+  const s=String(v||'').trim();
+  const m=s.match(/^(\d+)\s*\/\s*(\d+)/);
+  if(m)return{m:parseInt(m[1])||0,a:parseInt(m[2])||0};
+  return{m:0,a:0};
 }
 function parseFebBoxScore(rows){
   let rivalName=null,ourName=null;
@@ -1115,10 +1162,15 @@ function parseFebBoxScore(rows){
     for(let i=hIdx+1;i<rows.length;i++){
       const row=rows[i]||[];
       const c0=String(row[0]||'').trim(),c1=String(row[1]||'').trim();
-      if(c1.toUpperCase()==='TOTALES'){teamPts=parseInt(row[3])||0;break;}
+      if(c1.toUpperCase()==='TOTALES'){teamPts=febNum(row[3]);break;}
       if(!c0&&!c1){if(players.length)break;else continue;}
       const dorsal=parseInt(c0);if(isNaN(dorsal))continue;
-      players.push({dorsal:dorsal,name:c1,minutes:String(row[2]||''),points:parseInt(row[3])||0});
+      const p2=febFrac(row[4]),p3=febFrac(row[6]),p1=febFrac(row[8]);
+      players.push({
+        dorsal:dorsal,name:c1,minutes:febMinStr(row[2]),points:febNum(row[3]),
+        stats:{p2m:p2.m,p2a:p2.a,p3m:p3.m,p3a:p3.a,p1m:p1.m,p1a:p1.a,
+          reb:febNum(row[12]),ast:febNum(row[13]),stl:febNum(row[14]),blk:febNum(row[16])}
+      });
     }
     blocks.push({teamName:teamName,players:players,teamPts:teamPts});
   });
@@ -1152,14 +1204,14 @@ function showFebImportConfirm(feb,bg){
     <div class="form-group"><label>Fecha del partido</label><input id="febDate" type="date" value="${ds(new Date())}"></div>
     <div class="form-group"><label>Puntos del rival</label><input id="febRivalPts" type="number" value="${feb.rivalPoints||0}"></div>
     <div style="font-size:11px;color:var(--text2);margin:8px 0 4px;">${found.length} jugadoras reconocidas de la plantilla:</div>
-    ${found.map(function(m){return'<div class="report-row"><span class="rlbl">#'+m.fp.dorsal+' '+m.pl.name+'</span><span class="rval">'+fmtTime(m.fp.minutes)+' · '+m.fp.points+' pts</span></div>';}).join('')}
+    ${found.map(function(m){const th=m.pl.photo?'<img src="'+m.pl.photo+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover;margin-right:6px;vertical-align:middle;">':'<span class="avatar" style="width:20px;height:20px;font-size:9px;margin-right:6px;display:inline-flex;">'+ini(m.pl.name)+'</span>';return'<div class="report-row"><span class="rlbl">'+th+'#'+m.pl.dorsal+' '+m.pl.name+'</span><span class="rval">'+fmtTime(m.fp.minutes)+' · '+m.fp.points+' pts</span></div>';}).join('')}
     ${missing.length?'<div style="font-size:11px;color:var(--red);margin:8px 0 4px;">'+missing.length+' del Excel no coinciden con ninguna jugadora de la plantilla (no se importarán):</div>'+missing.map(function(m){return'<div class="report-row"><span class="rlbl">#'+m.fp.dorsal+' '+m.fp.name+'</span></div>';}).join(''):''}
     <button class="btn btn-primary btn-block" style="margin-top:10px;" id="febConfirm">Importar este partido</button>`;
   $('#febConfirm',bg).onclick=function(){
     const date=$('#febDate',bg).value,opp=$('#febRival',bg).value.trim();
     if(!date||!opp){toast('Fecha y rival obligatorios');return;}
     const rivPts=parseInt($('#febRivalPts',bg).value)||0;
-    const players=found.map(function(m){return{playerId:m.pl.id,minutes:m.fp.minutes,points:m.fp.points};});
+    const players=found.map(function(m){return{playerId:m.pl.id,minutes:m.fp.minutes,points:m.fp.points,stats:m.fp.stats};});
     const g={id:gid(),date:date,opponent:opp,players:players,rivalPoints:rivPts};
     t.games.push(g);
     players.forEach(function(gp){if(!t.trainingSessions[date])t.trainingSessions[date]={};t.trainingSessions[date][gp.playerId]='P';});
@@ -1187,7 +1239,7 @@ function showImp(){
           try{
             const wb=XLSX.read(ev.target.result,{type:'array'});
             const ws=wb.Sheets[wb.SheetNames[0]];
-            const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
+            const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
             const feb=parseFebBoxScore(rows);
             if(feb&&feb.ourPlayers.length){showFebImportConfirm(feb,bg);}
             else{processGameRows(rows,bg);}
@@ -1332,6 +1384,16 @@ function _playerGameTotals(t,p){
   eg.forEach(function(g){totalSec+=parseTime(g.minutes);totalPts+=(g.points||0);});
   return{count:pGames.length+eg.length,totalSec:totalSec,totalPts:totalPts};
 }
+function _playerExtraStatsTotals(t,p){
+  var tot={p2m:0,p2a:0,p3m:0,p3a:0,p1m:0,p1a:0,reb:0,ast:0,stl:0,blk:0};
+  t.games.forEach(function(g){
+    var gp=g.players.find(function(x){return x.playerId===p.id;});
+    if(gp&&gp.stats){
+      Object.keys(tot).forEach(function(k){tot[k]+=(gp.stats[k]||0);});
+    }
+  });
+  return tot;
+}
 
 function _playerSummaryGrid(t,p){
   var a=calcAtt(t,p.id);
@@ -1385,6 +1447,14 @@ function _playerGamesBlock(t,p,showTitle){
   });
   var tMin=Math.floor(totalSec/60),tSec=totalSec%60;
   h+='<div class="report-row" style="border-top:1px solid var(--accent);margin-top:4px;padding-top:6px;"><span class="rlbl" style="font-weight:700;">TOTAL</span><span class="rval" style="color:var(--accent);">'+tMin+':'+String(tSec).padStart(2,'0')+' - '+totalPts+' pts</span></div>';
+  var es=_playerExtraStatsTotals(t,p);
+  if(es.p2a+es.p3a+es.p1a+es.reb+es.stl+es.blk>0){
+    var p2pct=es.p2a?Math.round(es.p2m/es.p2a*100):0,p3pct=es.p3a?Math.round(es.p3m/es.p3a*100):0,p1pct=es.p1a?Math.round(es.p1m/es.p1a*100):0;
+    h+='<div style="font-size:9px;color:var(--text3);margin-top:4px;line-height:1.6;">'+
+      'T2: '+es.p2m+'/'+es.p2a+' ('+p2pct+'%) &nbsp; T3: '+es.p3m+'/'+es.p3a+' ('+p3pct+'%) &nbsp; TL: '+es.p1m+'/'+es.p1a+' ('+p1pct+'%)<br>'+
+      'Rebotes: '+es.reb+' &nbsp; Recuperaciones: '+es.stl+' &nbsp; Tapones: '+es.blk+
+      '</div>';
+  }
   return h;
 }
 
@@ -1394,7 +1464,7 @@ function rReports(c){
     <button class="btn ${S.repLvl==='team'?'btn-primary':'btn-outline'} btn-sm" onclick="S.repLvl='team';rc();">Equipo</button>
     <button class="btn ${S.repLvl==='club'?'btn-primary':'btn-outline'} btn-sm" onclick="S.repLvl='club';rc();">Club</button>
     <button class="btn btn-outline btn-sm" style="border-color:var(--accent);color:var(--accent);" onclick="generateReport(S.repLvl)">📄 PDF</button>
-    <button class="btn btn-outline btn-sm" style="border-color:var(--green);color:var(--green);" onclick="generateExcel()">📊 Excel</button>
+    <button class="btn btn-outline btn-sm" style="border-color:var(--green);color:var(--green);" onclick="generateExcel(S.repLvl)">📊 Excel</button>
   </div>`;
   const t=T();
   if(S.repLvl==='individual'){
@@ -1630,20 +1700,79 @@ function processExcel(data,bg){
 // Al abrir la app, sincronizar con Google Sheets antes de mostrar el login
 
 // ═══ GENERATE EXCEL ═══
-function generateExcel(){
-  const t=T();
-  // Load SheetJS if not loaded
+function generateExcel(mode){
+  if(mode==='individual'&&!S.repPlayer){toast('Elige primero una jugadora en Individual');return;}
+  const run=function(){
+    if(mode==='individual')_doGenerateExcelIndividual();
+    else if(mode==='team')_doGenerateExcelTeam();
+    else _doGenerateExcelClub();
+  };
   if(typeof XLSX==='undefined'){
     toast('Cargando...');
     var s=document.createElement('script');
     s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    s.onload=function(){_doGenerateExcel();};
+    s.onload=run;
     s.onerror=function(){toast('Error cargando librería');};
     document.head.appendChild(s);
-  } else { _doGenerateExcel(); }
+  } else { run(); }
 }
 
-function _doGenerateExcel(){
+function _doGenerateExcelIndividual(){
+  const t=T();const p=t.players.find(function(x){return x.id===S.repPlayer;});
+  if(!p){toast('Jugadora no encontrada');return;}
+  const a=calcAtt(t,p.id);const gt=_playerGameTotals(t,p);const es=_playerExtraStatsTotals(t,p);
+  const noEntrena=Math.max(a.teamDays-a.wTeam,0);
+  const tMin=Math.floor(gt.totalSec/60),tSec=gt.totalSec%60;
+  var wb=XLSX.utils.book_new();
+  var resumen=[
+    ['Jugadora',p.name],['Dorsal',p.dorsal],['Equipo',t.name],
+    ['Entrenos totales',a.teamDays],['Entrenos con equipo',a.wTeam],['No entrena',noEntrena],
+    ['% Asistencia',a.pct+'%'],['Partidos',gt.count],['Minutos jugados',tMin+':'+String(tSec).padStart(2,'0')],
+    ['Puntos anotados',gt.totalPts]
+  ];
+  if(es.p2a+es.p3a+es.p1a+es.reb+es.stl+es.blk>0){
+    resumen.push(['Tiros de 2',es.p2m+'/'+es.p2a],['Tiros de 3',es.p3m+'/'+es.p3a],['Tiros libres',es.p1m+'/'+es.p1a],
+      ['Rebotes totales',es.reb],['Recuperaciones',es.stl],['Tapones',es.blk]);
+  }
+  CODES.filter(function(c){return c.c&&c.c!=='1'&&a.bk[c.c]>0;}).forEach(function(c){resumen.push([c.l+' ('+c.c+')',a.bk[c.c]]);});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(resumen),'Resumen');
+  var pGames=t.games.filter(function(g){return g.players.some(function(gp){return gp.playerId===p.id;});});
+  var gamesData=[['Fecha','Rival','Minutos','Puntos']];
+  pGames.sort(function(a,b){return a.date.localeCompare(b.date);}).forEach(function(g){
+    var gp=g.players.find(function(x){return x.playerId===p.id;});
+    gamesData.push([normDate(g.date),g.opponent,fmtTime(gp.minutes),gp.points||0]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gamesData),'Partidos');
+  var monthP=_groupCodesByPeriod(t,p.id,'month');
+  if(monthP.length){
+    var mData=[['Mes','Detalle']];
+    monthP.forEach(function(pr){mData.push([pr.label,Object.keys(pr.codes).map(function(cd){return cd+':'+pr.codes[cd];}).join(' ')]);});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(mData),'Mensual');
+  }
+  XLSX.writeFile(wb,'BB_Badajoz_'+p.name.replace(/[^a-zA-Z0-9]/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('Excel descargado');
+}
+
+function _doGenerateExcelTeam(){
+  const t=T();
+  var wb=XLSX.utils.book_new();
+  var attData=[['Jugador','Dorsal','1','D','I','T','t','J','B','E','C','O','P','% Asist','Partidos','Puntos']];
+  t.players.sort(function(a,b){return a.dorsal-b.dorsal;}).forEach(function(p){
+    var a=calcAtt(t,p.id);var gt=_playerGameTotals(t,p);
+    attData.push([p.name,p.dorsal,a.bk['1']||0,a.bk['D']||0,a.bk['I']||0,a.bk['T']||0,a.bk['t']||0,a.bk['J']||0,a.bk['B']||0,a.bk['E']||0,a.bk['C']||0,a.bk['O']||0,a.bk['P']||0,a.pct+'%',gt.count,gt.totalPts]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(attData),'Asistencia');
+  var gamesData=[['Fecha','Rival','Resultado']];
+  t.games.sort(function(a,b){return a.date.localeCompare(b.date);}).forEach(function(g){
+    var pts=g.players.reduce(function(a,p){return a+(p.points||0);},0);
+    gamesData.push([normDate(g.date),g.opponent,pts+' - '+(g.rivalPoints||0)]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gamesData),'Partidos');
+  XLSX.writeFile(wb,'BB_Badajoz_'+t.name.replace(/[^a-zA-Z0-9]/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('Excel descargado');
+}
+
+function _doGenerateExcelClub(){
   var wb=XLSX.utils.book_new();
 
   // Sheet 1: Resumen Total (all teams)
