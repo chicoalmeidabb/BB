@@ -234,8 +234,11 @@ async function syncFromCloud(){
   // Group partidos by id
   const gameMap={};
   (d.partidos||[]).forEach(p=>{
-    if(!gameMap[p.id])gameMap[p.id]={id:p.id,date:p.fecha,equipoId:p.equipoId,opponent:p.rival,players:[]};
-    gameMap[p.id].players.push({playerId:p.jugadorId,minutes:p.minutos,points:parseInt(p.puntos)||0});
+    if(!gameMap[p.id])gameMap[p.id]={id:p.id,date:normDate(p.fecha),equipoId:p.equipoId,opponent:p.rival,rivalPoints:parseInt(p.rivalPoints)||0,players:[]};
+    const gp={playerId:p.jugadorId,minutes:p.minutos,points:parseInt(p.puntos)||0};
+    const hasStats=(p.p2m||p.p2a||p.p3m||p.p3a||p.p1m||p.p1a||p.reb||p.ast||p.stl||p.blk);
+    if(hasStats)gp.stats={p2m:parseInt(p.p2m)||0,p2a:parseInt(p.p2a)||0,p3m:parseInt(p.p3m)||0,p3a:parseInt(p.p3a)||0,p1m:parseInt(p.p1m)||0,p1a:parseInt(p.p1a)||0,reb:parseInt(p.reb)||0,ast:parseInt(p.ast)||0,stl:parseInt(p.stl)||0,blk:parseInt(p.blk)||0};
+    gameMap[p.id].players.push(gp);
   });
   Object.values(gameMap).forEach(g=>{
     if(teamMap[g.equipoId])teamMap[g.equipoId].games.push(g);
@@ -265,7 +268,7 @@ async function syncAsistenciaBulk(equipoId,registros){
 }
 async function syncGuardarPartido(equipoId,game){
   const jugadores=game.players.map(p=>{const pl=T()?.players.find(x=>x.id===p.playerId);return{...p,nombre:pl?pl.name:''};});
-  await gsPost({action:'guardarPartido',id:game.id,fecha:game.date,equipoId,rival:game.opponent,jugadores});
+  await gsPost({action:'guardarPartido',id:game.id,fecha:game.date,equipoId,rival:game.opponent,rivalPoints:game.rivalPoints||0,jugadores});
 }
 async function syncEliminarPartido(id){
   await gsPost({action:'eliminarPartido',id});
@@ -1034,11 +1037,11 @@ function rGames(c){
   const t=T();
   c.innerHTML=`<div style="display:flex;gap:8px;margin-bottom:12px;"><button class="btn btn-primary btn-sm" id="aG">+ Nuevo partido</button><button class="btn btn-outline btn-sm" id="iG">📥 Importar Excel/CSV</button></div>`;
   if(!t.games.length)c.innerHTML+='<div class="card" style="text-align:center;color:var(--text3);padding:16px;">Sin partidos</div>';
-  else t.games.sort((a,b)=>b.date.localeCompare(a.date)).forEach(g=>{
+  else t.games.sort((a,b)=>normDate(b.date).localeCompare(normDate(a.date))).forEach(g=>{
     const pts=g.players.reduce((a,p)=>a+(p.points||0),0);
     const rp=g.rivalPoints||0;
     const won=pts>rp;
-    c.innerHTML+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:13px;">${g.date}</div><div style="font-size:12px;color:var(--text2);">vs ${g.opponent}</div></div><div style="text-align:right;"><div style="font-size:22px;font-weight:800;color:${won?'var(--green)':'var(--red)'};">${pts} - ${rp}</div><div style="font-size:10px;color:var(--text3);">${won?'Victoria':'Derrota'}</div></div></div><div style="margin-top:6px;display:flex;gap:6px;"><button class="btn btn-outline btn-sm" onclick="showGM('${g.id}')">Editar</button><button class="btn btn-danger btn-sm" onclick="delG('${g.id}')">Borrar</button></div></div>`;
+    c.innerHTML+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:13px;">${normDate(g.date)}</div><div style="font-size:12px;color:var(--text2);">vs ${g.opponent}</div></div><div style="text-align:right;"><div style="font-size:22px;font-weight:800;color:${won?'var(--green)':'var(--red)'};">${pts} - ${rp}</div><div style="font-size:10px;color:var(--text3);">${won?'Victoria':'Derrota'}</div></div></div><div style="margin-top:6px;display:flex;gap:6px;"><button class="btn btn-outline btn-sm" onclick="showGM('${g.id}')">Editar</button><button class="btn btn-danger btn-sm" onclick="delG('${g.id}')">Borrar</button></div></div>`;
   });
   $('#aG').onclick=()=>showGM();$('#iG').onclick=()=>showImp();
 }
@@ -1060,7 +1063,7 @@ function parseTime(v){
 function showGM(eid){
   const t=T();const g=eid?t.games.find(x=>x.id===eid):null;const bg=el('div','modal-bg active');
   bg.innerHTML=`<div class="modal"><h3>${g?'Editar':'Nuevo'} partido</h3>
-    <div class="form-row"><div class="form-group"><label>Fecha</label><input id="gD" type="date" value="${g?g.date:ds(new Date())}"></div><div class="form-group"><label>Rival</label><input id="gO" value="${g?g.opponent:''}"></div></div>
+    <div class="form-row"><div class="form-group"><label>Fecha</label><input id="gD" type="date" value="${g?normDate(g.date):ds(new Date())}"></div><div class="form-group"><label>Rival</label><input id="gO" value="${g?g.opponent:''}"></div></div>
     <div class="form-group"><label>Puntos del rival</label><input id="gRivPts" type="number" placeholder="Puntos rival" value="${g?g.rivalPoints||0:0}" style="width:120px;"></div>
     <div class="section-title">Jugadores (tiempo: 1530 = 15min 30seg)</div><div id="gpR">
     ${(g?g.players:t.players.map(p=>({playerId:p.id,minutes:'',points:0}))).map(gp=>{const pl=t.players.find(x=>x.id===gp.playerId);if(!pl)return'';const th=pl.photo?'<img src="'+pl.photo+'" style="width:22px;height:22px;border-radius:50%;object-fit:cover;margin-right:6px;">':'<span class="avatar" style="width:22px;height:22px;font-size:9px;margin-right:6px;">'+ini(pl.name)+'</span>';return`<div class="report-row" style="align-items:center;padding:8px 0;"><span style="font-size:11px;font-weight:600;display:flex;align-items:center;">${th}#${pl.dorsal} ${pl.name}</span><span style="display:flex;gap:4px;"><input style="width:55px;padding:5px;font-size:11px;" placeholder="1530" value="${gp.minutes||''}" data-pid="${gp.playerId}" class="gM"><input style="width:45px;padding:5px;font-size:11px;" type="number" placeholder="Pts" value="${gp.points||''}" data-pid="${gp.playerId}" class="gP"></span></div>`;}).join('')}
@@ -2750,8 +2753,11 @@ async function init(){
         });
         const gameMap={};
         (res.data.partidos||[]).forEach(p=>{
-          if(!gameMap[p.id])gameMap[p.id]={id:p.id,date:p.fecha,equipoId:p.equipoId,opponent:p.rival,players:[]};
-          gameMap[p.id].players.push({playerId:p.jugadorId,minutes:p.minutos,points:parseInt(p.puntos)||0});
+          if(!gameMap[p.id])gameMap[p.id]={id:p.id,date:normDate(p.fecha),equipoId:p.equipoId,opponent:p.rival,rivalPoints:parseInt(p.rivalPoints)||0,players:[]};
+          const gp={playerId:p.jugadorId,minutes:p.minutos,points:parseInt(p.puntos)||0};
+          const hasStats=(p.p2m||p.p2a||p.p3m||p.p3a||p.p1m||p.p1a||p.reb||p.ast||p.stl||p.blk);
+          if(hasStats)gp.stats={p2m:parseInt(p.p2m)||0,p2a:parseInt(p.p2a)||0,p3m:parseInt(p.p3m)||0,p3a:parseInt(p.p3a)||0,p1m:parseInt(p.p1m)||0,p1a:parseInt(p.p1a)||0,reb:parseInt(p.reb)||0,ast:parseInt(p.ast)||0,stl:parseInt(p.stl)||0,blk:parseInt(p.blk)||0};
+          gameMap[p.id].players.push(gp);
         });
         Object.values(gameMap).forEach(g=>{
           if(teamMap[g.equipoId])teamMap[g.equipoId].games.push(g);
