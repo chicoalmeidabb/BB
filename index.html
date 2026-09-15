@@ -871,7 +871,8 @@ function rPlayerDetail(c){
     <button class="btn btn-primary btn-sm" style="margin-top:6px;" onclick="saveObs('${p.id}')">Guardar observaciones</button></div>
     <div class="card"><div style="font-weight:700;font-size:13px;margin-bottom:8px;">Asistencias</div>
     ${CODES.filter(cd=>cd.c&&(a.bk[cd.c]||0)>0).map(cd=>`<div class="stat-bar"><div class="top"><span class="lbl">${cd.l} (${cd.c})</span><span class="val">${a.bk[cd.c]}</span></div><div class="track"><div class="fill" style="width:${Math.min(a.bk[cd.c]/Math.max(a.teamDays,1)*100,100)}%;${cd.c==='O'?'background:var(--red)':cd.c==='B'?'background:var(--gold)':''}"></div></div></div>`).join('')}</div>
-    <div style="display:flex;gap:8px;margin-top:8px;">
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+    <button class="btn btn-outline btn-sm" style="border-color:var(--accent2);color:var(--accent2);" onclick="generatePlayerReport('${p.id}')">📄 Informe completo</button>
     <button class="btn btn-outline btn-sm" style="border-color:var(--green);color:var(--green);" onclick="generarFichaWA('${p.id}')">📤 Ficha WhatsApp</button>
     <button class="btn btn-danger btn-sm" onclick="delP('${p.id}')">Eliminar</button></div>`;
 }
@@ -1854,6 +1855,108 @@ function _doGenerateExcelClub(){
 }
 
 // ═══ FICHA WHATSAPP ═══
+function generatePlayerReport(pid){
+  const t=T();const p=t.players.find(x=>x.id===pid);if(!p)return;
+  const a=calcAtt(t,p.id);
+  const gt=_playerGameTotals(t,p);
+  const es=_playerExtraStatsTotals(t,p);
+  const faltas=(a.bk['J']||0)+(a.bk['B']||0)+(a.bk['E']||0)+(a.bk['C']||0)+(a.bk['O']||0);
+  const tMin=Math.floor(gt.totalSec/60),tSec=gt.totalSec%60;
+  const hasExtra=es.p2a+es.p3a+es.p1a+es.reb+es.stl+es.blk>0;
+  const p2pct=es.p2a?Math.round(es.p2m/es.p2a*100):0,p3pct=es.p3a?Math.round(es.p3m/es.p3a*100):0,p1pct=es.p1a?Math.round(es.p1m/es.p1a*100):0;
+
+  let html='<html><head><meta charset="UTF-8"><style>';
+  html+='body{font-family:Arial,sans-serif;font-size:12px;color:#222;padding:20px;max-width:800px;margin:0 auto;}';
+  html+='h1{font-size:20px;border-bottom:3px solid #1565C0;padding-bottom:8px;margin-bottom:4px;}';
+  html+='h2{font-size:15px;color:#1565C0;margin:16px 0 6px;}';
+  html+='table{width:100%;border-collapse:collapse;margin:8px 0 16px;font-size:11px;}';
+  html+='th{background:#1a1a1a;color:#fff;padding:6px 8px;text-align:left;font-size:10px;}';
+  html+='td{padding:5px 8px;border-bottom:1px solid #ddd;}';
+  html+='tr:nth-child(even){background:#f9f9f9;}';
+  html+='.kpi{display:inline-block;background:#f5f5f5;border-radius:8px;padding:10px 16px;margin:4px;text-align:center;min-width:100px;}';
+  html+='.kpi .v{font-size:22px;font-weight:800;color:#1565C0;}';
+  html+='.kpi .l{font-size:9px;color:#666;margin-top:2px;}';
+  html+='.hero{display:flex;gap:16px;align-items:center;margin-bottom:10px;}';
+  html+='.photo{width:110px;height:130px;border-radius:10px;object-fit:cover;background:#eee;border:1px solid #ddd;}';
+  html+='.pdata{font-size:12px;line-height:1.7;}';
+  html+='.footer{margin-top:20px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999;text-align:center;}';
+  html+='@media print{body{padding:0;}}';
+  html+='</style></head><body>';
+
+  html+=`<h1>BB Baloncesto Badajoz — ${t.name}</h1>`;
+  html+=`<p style="color:#666;font-size:11px;">Informe generado el ${new Date().toLocaleDateString('es-ES')} · Temporada 2026-2027</p>`;
+
+  html+='<div class="hero">';
+  html+=p.photo?`<img class="photo" src="${p.photo}">`:'<div class="photo" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:10px;">Sin foto</div>';
+  html+='<div class="pdata">';
+  html+=`<div style="font-size:22px;font-weight:800;color:#1565C0;">#${p.dorsal} ${p.name}</div>`;
+  html+=`<div><b>Año de nacimiento:</b> ${p.birthYear||'-'}</div>`;
+  html+=`<div><b>Teléfono:</b> ${p.phone||'-'}</div>`;
+  html+=`<div><b>Email:</b> ${p.email||'-'}</div>`;
+  html+='</div></div>';
+
+  if(p.obs){html+=`<h2>Observaciones</h2><p>${p.obs}</p>`;}
+
+  html+='<h2>Estadísticas</h2>';
+  html+=`<div class="kpi"><div class="v">${a.pct}%</div><div class="l">% Asistencia</div></div>`;
+  html+=`<div class="kpi"><div class="v">${a.wTeam}</div><div class="l">Entrenos con equipo</div></div>`;
+  html+=`<div class="kpi"><div class="v">${a.teamDays}</div><div class="l">Entrenos totales</div></div>`;
+  html+=`<div class="kpi"><div class="v">${faltas}</div><div class="l">Faltas (total)</div></div>`;
+  html+=`<div class="kpi"><div class="v">${gt.count}</div><div class="l">Partidos</div></div>`;
+  html+=`<div class="kpi"><div class="v">${tMin}:${String(tSec).padStart(2,'0')}</div><div class="l">Minutos jugados</div></div>`;
+  html+=`<div class="kpi"><div class="v">${gt.totalPts}</div><div class="l">Puntos anotados</div></div>`;
+  if(hasExtra){
+    html+=`<div class="kpi"><div class="v">${es.p3m}/${es.p3a}</div><div class="l">Tiros de 3 (${p3pct}%)</div></div>`;
+    html+=`<div class="kpi"><div class="v">${es.p2m}/${es.p2a}</div><div class="l">Tiros de 2 (${p2pct}%)</div></div>`;
+    html+=`<div class="kpi"><div class="v">${es.p1m}/${es.p1a}</div><div class="l">Tiros de 1 (${p1pct}%)</div></div>`;
+    html+=`<div class="kpi"><div class="v">${es.reb}</div><div class="l">Rebotes totales</div></div>`;
+    html+=`<div class="kpi"><div class="v">${es.stl}</div><div class="l">Recuperaciones</div></div>`;
+    html+=`<div class="kpi"><div class="v">${es.blk}</div><div class="l">Tapones</div></div>`;
+  }
+
+  html+='<h2>Desglose de asistencia</h2>';
+  html+='<table><tr><th>Concepto</th><th>Total</th></tr>';
+  CODES.filter(c=>c.c&&c.c!=='1'&&a.bk[c.c]>0).forEach(c=>{
+    html+=`<tr><td>${c.l} (${c.c})</td><td>${a.bk[c.c]}</td></tr>`;
+  });
+  html+='</table>';
+
+  const monthP=_groupCodesByPeriod(t,p.id,'month');
+  if(monthP.length){
+    html+='<h2>Mensual</h2><table><tr><th>Mes</th><th>Detalle</th></tr>';
+    monthP.forEach(function(pr){
+      var cs=Object.keys(pr.codes).map(function(cd){return cd+':'+pr.codes[cd];}).join('  ');
+      html+=`<tr><td style="text-transform:capitalize;">${pr.label}</td><td>${cs||'-'}</td></tr>`;
+    });
+    html+='</table>';
+  }
+
+  const pGames=t.games.filter(function(g){return g.players.some(function(gp){return gp.playerId===p.id;});});
+  const eg=(t.extraGames||[]).filter(function(g){return g.playerId===p.id;});
+  if(pGames.length+eg.length){
+    html+='<h2>Partidos</h2><table><tr><th>Fecha</th><th>Rival</th><th>Minutos</th><th>Puntos</th></tr>';
+    pGames.sort(function(x,y){return normDate(x.date).localeCompare(normDate(y.date));}).forEach(function(g){
+      const gp=g.players.find(function(x){return x.playerId===p.id;});
+      html+=`<tr><td>${normDate(g.date)}</td><td>${g.opponent}</td><td>${fmtTime(gp.minutes)}</td><td>${gp.points||0}</td></tr>`;
+    });
+    eg.sort(function(x,y){return normDate(x.date).localeCompare(normDate(y.date));}).forEach(function(g){
+      html+=`<tr><td>${normDate(g.date)}</td><td>${g.opponent} (${g.team||'otro'})</td><td>${fmtTime(g.minutes)}</td><td>${g.points||0}</td></tr>`;
+    });
+    html+='</table>';
+  }
+
+  html+=`<div class="footer">BB Baloncesto Badajoz · Informe generado automáticamente</div>`;
+  html+='</body></html>';
+
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const w=window.open(url,'_blank');
+  if(w){w.onload=()=>{setTimeout(()=>w.print(),300);};}
+  else{const a2=document.createElement('a');a2.href=url;a2.download=`Informe_${p.name.replace(/\s/g,'_')}_${new Date().toISOString().slice(0,10)}.html`;a2.click();}
+  toast('Informe generado');
+}
+window.generatePlayerReport=generatePlayerReport;
+
 function generarFichaWA(pid){
   var t=T();
   var p=t.players.find(function(x){return x.id===pid;});
