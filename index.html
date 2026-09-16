@@ -304,7 +304,7 @@ function _readScheduleFromForm(bg){
   return newSched;
 }
 async function syncCrearEquipo(team){
-  await gsPost({action:'crearEquipo',id:team.id,nombre:team.name,categoria:team.category,claveEntrenador:team.coachCode,claveDirector:team.directorCode,coach1:team.coach1||'',coach2:team.coach2||'',horario:JSON.stringify(team.weeklySchedule||[])});
+  return await gsPost({action:'crearEquipo',id:team.id,nombre:team.name,categoria:team.category,claveEntrenador:team.coachCode,claveDirector:team.directorCode,coach1:team.coach1||'',coach2:team.coach2||'',horario:JSON.stringify(team.weeklySchedule||[])});
 }
 async function syncGuardarJugador(equipoId,p){
   await gsPost({action:'guardarJugador',id:p.id,equipoId:equipoId,nombre:p.name,dorsal:p.dorsal,anioNacimiento:p.birthYear,telefono:p.phone,email:p.email});
@@ -742,7 +742,7 @@ function renderSetup(app){
     <button class="btn btn-primary btn-block" id="crBtn">Crear</button>
     <button class="btn btn-outline btn-block" style="margin-top:8px;" onclick="S.view='login';render();">Cancelar</button>`;
   app.appendChild(s);
-  $('#crBtn').onclick=()=>{const n=$('#sN').value.trim();if(!n)return toast('Nombre obligatorio');
+  $('#crBtn').onclick=async()=>{const n=$('#sN').value.trim();if(!n)return toast('Nombre obligatorio');
     if(DB.teams.some(function(t){return t.name.toLowerCase()===n.toLowerCase();})){toast('Ya existe un equipo con ese nombre');return;}
     const c1=$('#sC1').value.trim(),c2=$('#sC2').value.trim();if(!c1||!c2)return toast('Establece ambas claves');const coachName='';
     const coach1=$('#sCoach1').value.trim(),coach2=$('#sCoach2').value.trim();const team={id:gid(),name:n,coachCode:c1,directorCode:c2,coachName:coachName,coach1:coach1,coach2:coach2,players:[],trainingSessions:{},games:[],extraGames:[],trainingDays:{}};DB.teams.push(team);
@@ -763,7 +763,14 @@ function renderSetup(app){
       var teamsStr=coachObj.teamRoles.map(function(tr){return tr.teamId+':'+tr.role;}).join(',');
       gsPost({action:'guardarEntrenador',id:coachObj.id,nombre:coachObj.name,telefono:coachObj.phone,email:coachObj.email,password:coachObj.password,teams:teamsStr});
     });
-    saveDB(DB);syncCrearEquipo(team);S.view=S.role?'teamlist':'login';S.teamListData=DB.teams;render();toast('Equipo creado');};
+    saveDB(DB);
+    const btn=$('#crBtn');btn.disabled=true;btn.textContent='Creando...';
+    const res=await syncCrearEquipo(team);
+    btn.disabled=false;btn.textContent='Crear';
+    S.view=S.role?'teamlist':'login';S.teamListData=DB.teams;render();
+    if(res&&res.ok)toast('✓ Equipo creado y guardado en la nube');
+    else toast('⚠ Se creó localmente pero no se pudo guardar en la nube. Revisa tu conexión.');
+  };
 }
 
 function renderMain(app){
@@ -1367,12 +1374,17 @@ window.editTeamSettings=()=>{
     '</div>';
   document.body.appendChild(bg);
   bg.onclick=function(e){if(e.target===bg)bg.remove();};
-  $('#stSave',bg).onclick=function(){
+  $('#stSave',bg).onclick=async function(){
     t.name=$('#stName',bg).value.trim();
     t.coachCode=$('#stC1',bg).value.trim();
     t.directorCode=$('#stC2',bg).value.trim();
     t.weeklySchedule=_readScheduleFromForm(bg);
-    saveDB(DB);syncCrearEquipo(t);bg.remove();render();toast('Equipo actualizado');
+    saveDB(DB);
+    const btn=$('#stSave',bg);btn.disabled=true;btn.textContent='Guardando...';
+    const res=await syncCrearEquipo(t);
+    btn.disabled=false;btn.textContent='Guardar';
+    if(res&&res.ok){bg.remove();render();toast('✓ Equipo actualizado y guardado en la nube');}
+    else{toast('⚠ No se pudo guardar en la nube. Revisa tu conexión e inténtalo de nuevo (no cierres esta ventana).');}
   };
   $('#stDelete',bg).onclick=function(){
     if(!confirm('¿ELIMINAR este equipo y TODOS sus datos? Esta accion no se puede deshacer.')){return;}
@@ -2373,13 +2385,18 @@ window.editTeamFromAdmin=function(tid){
   document.body.appendChild(bg);
   bg.onclick=function(e){if(e.target===bg)bg.remove();};
   bg.querySelector('#etCancel').onclick=function(){bg.remove();showTeamManager();};
-  bg.querySelector('#etSave').onclick=function(){
+  bg.querySelector('#etSave').onclick=async function(){
     t.name=$('#etName',bg).value.trim();
     t.coach1=$('#etCoach1',bg).value.trim();t.coach2=$('#etCoach2',bg).value.trim();
     t.coachCode=$('#etC1',bg).value.trim();
     t.directorCode=$('#etC2',bg).value.trim();
     t.weeklySchedule=_readScheduleFromForm(bg);
-    saveDB(DB);syncCrearEquipo(t);bg.remove();toast('Equipo actualizado');showTeamManager();
+    saveDB(DB);
+    const btn=bg.querySelector('#etSave');btn.disabled=true;btn.textContent='Guardando...';
+    const res=await syncCrearEquipo(t);
+    btn.disabled=false;btn.textContent='Guardar';
+    if(res&&res.ok){bg.remove();toast('✓ Equipo actualizado y guardado en la nube');showTeamManager();}
+    else{toast('⚠ No se pudo guardar en la nube. Revisa tu conexión e inténtalo de nuevo (no cierres esta ventana).');}
   };
 };
 
