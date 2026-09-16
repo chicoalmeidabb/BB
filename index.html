@@ -214,7 +214,7 @@ async function syncFromCloud(){
   // Rebuild DB from cloud data
   const teamMap={};
   (d.equipos||[]).forEach(eq=>{
-    teamMap[eq.id]={id:eq.id,name:eq.nombre,category:eq.categoria,coachCode:eq.claveEntrenador,directorCode:eq.claveDirector,coachName:eq.coachName||'',coach1:eq.coach1||'',coach2:eq.coach2||'',players:[],trainingSessions:{},games:[],trainingDays:{},extraGames:[]};
+    teamMap[eq.id]={id:eq.id,name:eq.nombre,category:eq.categoria,coachCode:eq.claveEntrenador,directorCode:eq.claveDirector,coachName:eq.coachName||'',coach1:eq.coach1||'',coach2:eq.coach2||'',weeklySchedule:_parseHorario(eq.horario),players:[],trainingSessions:{},games:[],trainingDays:{},extraGames:[]};
   });
   (d.jugadores||[]).forEach(j=>{
     if(!teamMap[j.equipoId])return;
@@ -251,8 +251,41 @@ async function syncFromCloud(){
 }
 
 // ── Sync wrappers for write operations ──
+function _parseHorario(v){
+  if(!v)return[];
+  try{var r=JSON.parse(v);return Array.isArray(r)?r:[];}catch(e){return[];}
+}
+var _DAY_LABELS=[{k:'L',l:'Lunes'},{k:'M',l:'Martes'},{k:'X',l:'Miércoles'},{k:'J',l:'Jueves'},{k:'V',l:'Viernes'},{k:'S',l:'Sábado'},{k:'D',l:'Domingo'}];
+function _buildScheduleRowsHTML(t){
+  var sched=t.weeklySchedule||[];
+  function schedFor(k){return sched.find(function(s){return s.day===k;})||{};}
+  var pavOptions=(DB.schedules||[]).map(function(p){return'<option value="'+p.name+'">';}).join('');
+  var rows=_DAY_LABELS.map(function(d){
+    var s=schedFor(d.k);
+    return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;padding:6px;background:var(--bg3);border-radius:6px;">'+
+      '<label style="display:flex;align-items:center;gap:4px;width:70px;font-size:11px;"><input type="checkbox" class="schedDay" data-day="'+d.k+'" '+(s.time?'checked':'')+' style="width:auto;">'+d.l+'</label>'+
+      '<input type="time" class="schedTime" data-day="'+d.k+'" value="'+(s.time||'')+'" style="width:90px;padding:5px;font-size:11px;">'+
+      '<input class="schedPav" data-day="'+d.k+'" list="pavList" placeholder="Pabellón" value="'+(s.pavilion||'')+'" style="flex:1;padding:5px;font-size:11px;">'+
+      '</div>';
+  }).join('');
+  return '<div style="font-weight:700;font-size:12px;margin:14px 0 6px;">Horario semanal de entrenamiento</div>'+
+    '<div style="font-size:10px;color:var(--text3);margin-bottom:8px;">Marca los días que entrena, con hora y pabellón. Se puede cambiar cuando quieras si cambia a lo largo de la temporada.</div>'+
+    rows+'<datalist id="pavList">'+pavOptions+'</datalist>';
+}
+function _readScheduleFromForm(bg){
+  var newSched=[];
+  bg.querySelectorAll('.schedDay').forEach(function(chk){
+    var day=chk.dataset.day;
+    if(chk.checked){
+      var time=bg.querySelector('.schedTime[data-day="'+day+'"]').value;
+      var pav=bg.querySelector('.schedPav[data-day="'+day+'"]').value.trim();
+      newSched.push({day:day,time:time,pavilion:pav});
+    }
+  });
+  return newSched;
+}
 async function syncCrearEquipo(team){
-  await gsPost({action:'crearEquipo',id:team.id,nombre:team.name,categoria:team.category,claveEntrenador:team.coachCode,claveDirector:team.directorCode,coach1:team.coach1||'',coach2:team.coach2||''});
+  await gsPost({action:'crearEquipo',id:team.id,nombre:team.name,categoria:team.category,claveEntrenador:team.coachCode,claveDirector:team.directorCode,coach1:team.coach1||'',coach2:team.coach2||'',horario:JSON.stringify(team.weeklySchedule||[])});
 }
 async function syncGuardarJugador(equipoId,p){
   await gsPost({action:'guardarJugador',id:p.id,equipoId:equipoId,nombre:p.name,dorsal:p.dorsal,anioNacimiento:p.birthYear,telefono:p.phone,email:p.email});
@@ -753,6 +786,8 @@ document.addEventListener('visibilitychange',()=>{
 function rHome(c){
   const t=T();const np=t.players.length;const days=Object.keys(t.trainingSessions).length;
   const avg=np?Math.round(t.players.reduce((a,p)=>a+calcAtt(t,p.id).pct,0)/np):0;
+  const dayFull={'L':'Lun','M':'Mar','X':'Mié','J':'Jue','V':'Vie','S':'Sáb','D':'Dom'};
+  const schedTxt=(t.weeklySchedule||[]).length?(t.weeklySchedule||[]).map(function(s){return dayFull[s.day]+(s.time?' '+s.time:'')+(s.pavilion?' ('+s.pavilion+')':'');}).join(' · '):'';
   c.innerHTML=`<div class="kpi-row">
     <div class="kpi"><div class="val">${np}</div><div class="lbl">Jugadores</div></div>
     <div class="kpi"><div class="val">${days}</div><div class="lbl">Días registrados</div></div>
@@ -763,6 +798,7 @@ function rHome(c){
         <div><span style="font-size:11px;color:var(--text3);">Entrenador/a:</span> <span style="font-weight:600;font-size:13px;">${(function(){var c=(DB.coaches||[]).find(function(x){return(x.teams||[]).indexOf(t.id)>=0;});if(c)return c.name;var cc=[t.coach1,t.coach2].filter(function(x){return x;}).join(' / ');return cc||'Sin asignar';})()}</span></div>
         <button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="editTeamSettings()">Ajustes</button>
       </div>
+      ${schedTxt?'<div style="font-size:11px;color:var(--text2);margin-top:6px;">🗓 '+schedTxt+'</div>':''}
     </div>
     <div class="section-title">Plantilla</div>`;
   if(!np){c.innerHTML+='<div class="card" style="text-align:center;color:var(--text3);padding:20px;">Añade jugadores en Plantilla o importa un Excel con los datos del equipo.</div>';return;}
@@ -873,7 +909,8 @@ function rPlayerDetail(c){
     ${CODES.filter(cd=>cd.c&&(a.bk[cd.c]||0)>0).map(cd=>`<div class="stat-bar"><div class="top"><span class="lbl">${cd.l} (${cd.c})</span><span class="val">${a.bk[cd.c]}</span></div><div class="track"><div class="fill" style="width:${Math.min(a.bk[cd.c]/Math.max(a.teamDays,1)*100,100)}%;${cd.c==='O'?'background:var(--red)':cd.c==='B'?'background:var(--gold)':''}"></div></div></div>`).join('')}</div>
     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
     <button class="btn btn-outline btn-sm" style="border-color:var(--accent2);color:var(--accent2);" onclick="generatePlayerReport('${p.id}')">📄 Informe completo</button>
-    <button class="btn btn-outline btn-sm" style="border-color:var(--green);color:var(--green);" onclick="generarFichaWA('${p.id}')">📤 Ficha WhatsApp</button>
+    <button class="btn btn-outline btn-sm" style="border-color:var(--green);color:var(--green);" onclick="compartirFicha('${p.id}','whatsapp')">📤 WhatsApp</button>
+    <button class="btn btn-outline btn-sm" style="border-color:var(--red);color:var(--red);" onclick="compartirFicha('${p.id}','email')">📧 Email</button>
     <button class="btn btn-danger btn-sm" onclick="delP('${p.id}')">Eliminar</button></div>`;
 }
 
@@ -1301,6 +1338,7 @@ window.editTeamSettings=()=>{
     '<div class="form-group"><label>Categoría</label><input id="stCat" value="'+(t.category||'')+'"></div>'+
     '<div class="form-row"><div class="form-group"><label>Clave entrenador</label><input id="stC1" value="'+String(t.coachCode||'')+'"></div>'+
     '<div class="form-group"><label>Clave director</label><input id="stC2" value="'+String(t.directorCode||'')+'"></div></div>'+
+    _buildScheduleRowsHTML(t)+
     '<div style="display:flex;gap:8px;margin-top:14px;">'+
     '<button class="btn btn-primary btn-block" id="stSave">Guardar</button>'+
     '<button class="btn btn-outline" onclick="this.closest(\'.modal-bg\').remove()">Cancelar</button></div>'+
@@ -1313,6 +1351,7 @@ window.editTeamSettings=()=>{
         t.category=$('#stCat',bg).value.trim();
     t.coachCode=$('#stC1',bg).value.trim();
     t.directorCode=$('#stC2',bg).value.trim();
+    t.weeklySchedule=_readScheduleFromForm(bg);
     saveDB(DB);syncCrearEquipo(t);bg.remove();render();toast('Equipo actualizado');
   };
   $('#stDelete',bg).onclick=function(){
@@ -1957,42 +1996,40 @@ function generatePlayerReport(pid){
 }
 window.generatePlayerReport=generatePlayerReport;
 
-function generarFichaWA(pid){
+function _fichaFragmentHTML(pid){
   var t=T();
   var p=t.players.find(function(x){return x.id===pid;});
-  if(!p)return;
+  if(!p)return null;
   var a=calcAtt(t,p.id);
   var meses=['Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun'];
   var mesesNum=[[2026,9],[2026,10],[2026,11],[2026,12],[2027,1],[2027,2],[2027,3],[2027,4],[2027,5],[2027,6]];
   var colorMap={'1':'#2ecc71','D':'#3498db','I':'#5b6abf','T':'#8e44ad','t':'#c0392b','J':'#2196F3','B':'#e74c3c','E':'#e67e22','C':'#95a5a6','O':'#ff3b30','P':'#e8612d'};
 
-  var h='<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>';
-  h+='body{font-family:Arial,sans-serif;background:#111;color:#fff;padding:12px;max-width:420px;margin:0 auto;}';
-  h+='.hdr{text-align:center;margin-bottom:12px;}';
-  h+='.hdr h2{font-size:18px;margin:4px 0;color:#1565C0;}';
-  h+='.hdr .meta{font-size:12px;color:#999;}';
-  h+='.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:10px;text-align:center;font-size:10px;}';
-  h+='.stat{background:#1a1a1a;border-radius:6px;padding:6px 2px;}';
-  h+='.stat .v{font-size:18px;font-weight:800;color:#1565C0;}';
-  h+='.cal{margin-bottom:6px;}';
-  h+='.cal .mes{font-size:11px;font-weight:700;color:#999;margin:4px 0 2px;}';
-  h+='.cal .days{display:grid;grid-template-columns:repeat(31,1fr);gap:1px;}';
-  h+='.cal .day{font-size:7px;text-align:center;padding:2px 0;border-radius:2px;font-weight:700;min-height:14px;}';
-  h+='.legend{display:flex;flex-wrap:wrap;gap:4px;font-size:8px;margin-top:8px;}';
-  h+='.legend span{padding:1px 4px;border-radius:2px;}';
-  h+='.foot{text-align:center;font-size:9px;color:#666;margin-top:10px;font-style:italic;}';
-  h+='</style></head><body>';
+  var h='<style>';
+  h+='.ficha-wrap{font-family:Arial,sans-serif;background:#111;color:#fff;padding:12px;width:400px;}';
+  h+='.ficha-wrap .hdr{text-align:center;margin-bottom:12px;}';
+  h+='.ficha-wrap .hdr h2{font-size:18px;margin:4px 0;color:#1565C0;}';
+  h+='.ficha-wrap .hdr .meta{font-size:12px;color:#999;}';
+  h+='.ficha-wrap .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:10px;text-align:center;font-size:10px;}';
+  h+='.ficha-wrap .stat{background:#1a1a1a;border-radius:6px;padding:6px 2px;}';
+  h+='.ficha-wrap .stat .v{font-size:18px;font-weight:800;color:#1565C0;}';
+  h+='.ficha-wrap .cal{margin-bottom:6px;}';
+  h+='.ficha-wrap .cal .mes{font-size:11px;font-weight:700;color:#999;margin:4px 0 2px;}';
+  h+='.ficha-wrap .cal .days{display:grid;grid-template-columns:repeat(31,1fr);gap:1px;}';
+  h+='.ficha-wrap .cal .day{font-size:7px;text-align:center;padding:2px 0;border-radius:2px;font-weight:700;min-height:14px;}';
+  h+='.ficha-wrap .legend{display:flex;flex-wrap:wrap;gap:4px;font-size:8px;margin-top:8px;}';
+  h+='.ficha-wrap .legend span{padding:1px 4px;border-radius:2px;}';
+  h+='.ficha-wrap .foot{text-align:center;font-size:9px;color:#666;margin-top:10px;font-style:italic;}';
+  h+='</style>';
+  h+='<div class="ficha-wrap">';
 
-  // Header
-  h+='<div class="hdr"><img src="https://www.baloncestobadajoz.es/archivos/imagenes/logo.png" style="height:50px;margin-bottom:6px;" onerror="this.style.display=\'none\'">';
+  h+='<div class="hdr"><img src="https://www.baloncestobadajoz.es/archivos/imagenes/logo.png" style="height:50px;margin-bottom:6px;" crossorigin="anonymous" onerror="this.style.display=\'none\'">';
   h+='<h2>'+t.name+'</h2>';
   h+='<div style="font-size:22px;font-weight:800;">#'+p.dorsal+' '+p.name+'</div>';
   h+='<div class="meta">Temporada 2026-2027</div>';
   h+='</div>';
 
-  // Stats summary
   var entrenos=(a.bk['1']||0)+(a.bk['D']||0)*2+(a.bk['I']||0);
-  var tec=(a.bk['T']||0)+(a.bk['t']||0);
   var faltas=(a.bk['J']||0)+(a.bk['B']||0)+(a.bk['E']||0)+(a.bk['C']||0)+(a.bk['O']||0);
   var eg=(t.extraGames||[]).filter(function(g){return g.playerId===p.id;}).length;
 
@@ -2003,7 +2040,6 @@ function generarFichaWA(pid){
   h+='<div class="stat"><div class="v">'+faltas+'</div>Faltas</div>';
   h+='</div>';
 
-  // Calendar month by month
   meses.forEach(function(mes,mi){
     var yr=mesesNum[mi][0],mo=mesesNum[mi][1];
     var daysInMonth=new Date(yr,mo,0).getDate();
@@ -2022,7 +2058,6 @@ function generarFichaWA(pid){
     h+='</div></div>';
   });
 
-  // Legend
   h+='<div class="legend">';
   h+='<span style="background:#2ecc71;">1 Entrenó</span>';
   h+='<span style="background:#3498db;">D Dobla</span>';
@@ -2037,12 +2072,57 @@ function generarFichaWA(pid){
   h+='</div>';
 
   h+='<div class="foot">BB Baloncesto Badajoz · Creado por Chico Almeida</div>';
-  h+='</body></html>';
-
-  var w=window.open('','_blank');
-  if(w){w.document.write(h);w.document.close();}
-  else{toast('Permite ventanas emergentes');}
+  h+='</div>';
+  return{html:h,playerName:p.name};
 }
+
+function _loadHtml2Canvas(cb){
+  if(typeof html2canvas!=='undefined'){cb();return;}
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  s.onload=cb;
+  s.onerror=function(){toast('Error cargando la librería de imagen');};
+  document.head.appendChild(s);
+}
+
+window.compartirFicha=function(pid,channel){
+  var frag=_fichaFragmentHTML(pid);
+  if(!frag)return;
+  toast('Generando imagen...');
+  _loadHtml2Canvas(function(){
+    var holder=document.createElement('div');
+    holder.style.position='fixed';holder.style.left='-9999px';holder.style.top='0';
+    holder.innerHTML=frag.html;
+    document.body.appendChild(holder);
+    var target=holder.querySelector('.ficha-wrap');
+    html2canvas(target,{backgroundColor:'#111111',scale:2,useCORS:true}).then(function(canvas){
+      document.body.removeChild(holder);
+      canvas.toBlob(function(blob){
+        if(!blob){toast('No se pudo generar la imagen');return;}
+        var fileName='Ficha_'+frag.playerName.replace(/\s/g,'_')+'.png';
+        var file=new File([blob],fileName,{type:'image/png'});
+        var shareData={files:[file],title:'Ficha de '+frag.playerName,text:'Ficha de '+frag.playerName+' - BB Baloncesto Badajoz'};
+        if(navigator.canShare&&navigator.canShare(shareData)){
+          navigator.share(shareData).catch(function(){});
+        } else {
+          var url=URL.createObjectURL(blob);
+          var a=document.createElement('a');a.href=url;a.download=fileName;a.click();
+          toast('Imagen descargada, adjúntala manualmente');
+          setTimeout(function(){
+            if(channel==='whatsapp'){
+              window.open('https://wa.me/?text='+encodeURIComponent('Ficha de '+frag.playerName+' (adjunta la imagen que se acaba de descargar)'),'_blank');
+            } else {
+              window.open('mailto:?subject='+encodeURIComponent('Ficha de '+frag.playerName)+'&body='+encodeURIComponent('Adjunta la imagen que se acaba de descargar (revisa tu carpeta de Descargas).'),'_blank');
+            }
+          },400);
+        }
+      },'image/png');
+    }).catch(function(err){
+      if(holder.parentNode)document.body.removeChild(holder);
+      toast('Error generando la imagen');
+    });
+  });
+};
 
 function rSchedule(c){
   var scheds=DB.schedules||[];
@@ -2182,7 +2262,7 @@ function rHelp(c){
 
     <div class="card">
       <div style="font-weight:700;font-size:15px;color:var(--accent);margin-bottom:8px;">📤 FICHA WHATSAPP</div>
-      <p style="margin-bottom:8px;">Desde la ficha de cada jugadora pulsa el botón verde "📤 Ficha WhatsApp".</p>
+      <p style="margin-bottom:8px;">Desde la ficha de cada jugadora pulsa "📤 WhatsApp" o "📧 Email" para compartir su ficha como imagen.</p>
       <p style="margin-bottom:4px;">Se abre una página visual con el calendario completo de la temporada, día a día con colores. Haz captura de pantalla y envíala por WhatsApp.</p>
       <p style="margin-bottom:8px;">Ideal para informar cada trimestre o al final de temporada.</p>
     </div>
@@ -2263,6 +2343,7 @@ window.editTeamFromAdmin=function(tid){
     '<div class="form-row"><div class="form-group"><label>1er Entrenador</label><input id="etCoach1" value="'+(t.coach1||'')+'"></div><div class="form-group"><label>2do Entrenador</label><input id="etCoach2" value="'+(t.coach2||'')+'"></div></div>'+
     '<div class="form-group"><label>Categoría</label><input id="etCat" value="'+t.category+'"></div>'+
     '<div class="form-row"><div class="form-group"><label>Clave entrenador</label><input id="etC1" value="'+String(t.coachCode||'')+'"></div><div class="form-group"><label>Clave director</label><input id="etC2" value="'+String(t.directorCode||'')+'"></div></div>'+
+    _buildScheduleRowsHTML(t)+
     '<div style="display:flex;gap:8px;margin-top:14px;"><button class="btn btn-primary btn-block" id="etSave">Guardar</button><button class="btn btn-outline" id="etCancel">Cancelar</button></div></div>';
   document.body.appendChild(bg);
   bg.onclick=function(e){if(e.target===bg)bg.remove();};
@@ -2272,6 +2353,7 @@ window.editTeamFromAdmin=function(tid){
     t.category=$('#etCat',bg).value.trim();t.coach1=$('#etCoach1',bg).value.trim();t.coach2=$('#etCoach2',bg).value.trim();
     t.coachCode=$('#etC1',bg).value.trim();
     t.directorCode=$('#etC2',bg).value.trim();
+    t.weeklySchedule=_readScheduleFromForm(bg);
     saveDB(DB);syncCrearEquipo(t);bg.remove();toast('Equipo actualizado');showTeamManager();
   };
 };
@@ -2840,7 +2922,7 @@ async function init(){
         // Rebuild DB
         const teamMap={};
         (res.data.equipos||[]).forEach(eq=>{
-          teamMap[eq.id]={id:eq.id,name:eq.nombre,category:eq.categoria,coachCode:eq.claveEntrenador,directorCode:eq.claveDirector,coachName:eq.coachName||'',coach1:eq.coach1||'',coach2:eq.coach2||'',players:[],trainingSessions:{},games:[],trainingDays:{}};
+          teamMap[eq.id]={id:eq.id,name:eq.nombre,category:eq.categoria,coachCode:eq.claveEntrenador,directorCode:eq.claveDirector,coachName:eq.coachName||'',coach1:eq.coach1||'',coach2:eq.coach2||'',weeklySchedule:_parseHorario(eq.horario),players:[],trainingSessions:{},games:[],trainingDays:{}};
         });
         // If Equipos sheet is empty but we have jugadores, auto-create teams
         const allEquipoIds=new Set();
