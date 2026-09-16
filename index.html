@@ -162,13 +162,14 @@ const CONFIG_URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbwD3Er
 
 const DB_KEY='cbb_v4_cache';
 function loadDB(){try{return JSON.parse(localStorage.getItem(DB_KEY))||defaultDB();}catch(e){return defaultDB();}}
-function saveDB(db){localStorage.setItem(DB_KEY,JSON.stringify(db));}
+function saveDB(db){if(typeof S!=='undefined'&&S.readOnly){toast('🔒 Solo lectura: la directiva no puede modificar datos');return;}localStorage.setItem(DB_KEY,JSON.stringify(db));}
 function defaultDB(){return{teams:[],clubName:'BB Baloncesto Badajoz'};}
 let DB=loadDB();
 let SYNCING=false;
 
 // ── Google Sheets API ──
 async function gsPost(body){
+  if(typeof S!=='undefined'&&S.readOnly){toast('🔒 Solo lectura: la directiva no puede modificar datos');return{ok:false,blocked:true};}
   if(CONFIG_URL_GOOGLE_SHEETS==='AQUÍ_IRÁ_EL_ENLACE'){return{ok:false};}
   try{
     SYNCING=true;showSync(true);
@@ -256,30 +257,38 @@ function _parseHorario(v){
   try{var r=JSON.parse(v);return Array.isArray(r)?r:[];}catch(e){return[];}
 }
 var _DAY_LABELS=[{k:'L',l:'Lunes'},{k:'M',l:'Martes'},{k:'X',l:'Miércoles'},{k:'J',l:'Jueves'},{k:'V',l:'Viernes'},{k:'S',l:'Sábado'},{k:'D',l:'Domingo'}];
+var _PABELLONES_FIJOS=['Palmeras','Nuria Cabanillas','Gévora'];
 function _buildScheduleRowsHTML(t){
   var sched=t.weeklySchedule||[];
   function schedFor(k){return sched.find(function(s){return s.day===k;})||{};}
-  var pavOptions=(DB.schedules||[]).map(function(p){return'<option value="'+p.name+'">';}).join('');
+  var pavNames=_PABELLONES_FIJOS.slice();
+  (DB.schedules||[]).forEach(function(p){if(pavNames.indexOf(p.name)<0)pavNames.push(p.name);});
+  var pavOptions=pavNames.map(function(n){return'<option value="'+n+'">';}).join('');
   var rows=_DAY_LABELS.map(function(d){
     var s=schedFor(d.k);
-    return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;padding:6px;background:var(--bg3);border-radius:6px;">'+
-      '<label style="display:flex;align-items:center;gap:4px;width:70px;font-size:11px;"><input type="checkbox" class="schedDay" data-day="'+d.k+'" '+(s.time?'checked':'')+' style="width:auto;">'+d.l+'</label>'+
-      '<input type="time" class="schedTime" data-day="'+d.k+'" value="'+(s.time||'')+'" style="width:90px;padding:5px;font-size:11px;">'+
-      '<input class="schedPav" data-day="'+d.k+'" list="pavList" placeholder="Pabellón" value="'+(s.pavilion||'')+'" style="flex:1;padding:5px;font-size:11px;">'+
-      '</div>';
+    var active=!!(s.startTime||s.pavilion);
+    return '<div style="margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:6px;'+(active?'border:1px solid var(--accent2);':'')+'">'+
+      '<div style="font-size:11px;font-weight:700;margin-bottom:5px;">'+d.l+'</div>'+
+      '<div style="display:flex;gap:5px;align-items:center;">'+
+      '<input type="time" class="schedStart" data-day="'+d.k+'" value="'+(s.startTime||'')+'" style="width:82px;padding:5px;font-size:11px;">'+
+      '<span style="font-size:11px;color:var(--text3);">a</span>'+
+      '<input type="time" class="schedEnd" data-day="'+d.k+'" value="'+(s.endTime||'')+'" style="width:82px;padding:5px;font-size:11px;">'+
+      '<input class="schedPav" data-day="'+d.k+'" list="pavList" placeholder="Pabellón" value="'+(s.pavilion||'')+'" style="flex:1;min-width:0;padding:5px;font-size:11px;">'+
+      '</div></div>';
   }).join('');
   return '<div style="font-weight:700;font-size:12px;margin:14px 0 6px;">Horario semanal de entrenamiento</div>'+
-    '<div style="font-size:10px;color:var(--text3);margin-bottom:8px;">Marca los días que entrena, con hora y pabellón. Se puede cambiar cuando quieras si cambia a lo largo de la temporada.</div>'+
+    '<div style="font-size:10px;color:var(--text3);margin-bottom:8px;">Rellena hora de inicio, fin y pabellón en los días que entrena. Deja en blanco los días que no entrena. Se puede cambiar cuando quieras si cambia a lo largo de la temporada.</div>'+
     rows+'<datalist id="pavList">'+pavOptions+'</datalist>';
 }
 function _readScheduleFromForm(bg){
   var newSched=[];
-  bg.querySelectorAll('.schedDay').forEach(function(chk){
-    var day=chk.dataset.day;
-    if(chk.checked){
-      var time=bg.querySelector('.schedTime[data-day="'+day+'"]').value;
-      var pav=bg.querySelector('.schedPav[data-day="'+day+'"]').value.trim();
-      newSched.push({day:day,time:time,pavilion:pav});
+  bg.querySelectorAll('.schedStart').forEach(function(inp){
+    var day=inp.dataset.day;
+    var startTime=inp.value;
+    var endTime=bg.querySelector('.schedEnd[data-day="'+day+'"]').value;
+    var pav=bg.querySelector('.schedPav[data-day="'+day+'"]').value.trim();
+    if(startTime||endTime||pav){
+      newSched.push({day:day,startTime:startTime,endTime:endTime,pavilion:pav});
     }
   });
   return newSched;
@@ -309,7 +318,7 @@ async function syncEliminarPartido(id){
 async function syncImportarJugadoresBulk(equipoId,jugadores){
   await gsPost({action:'importarJugadoresBulk',jugadores:jugadores.map(j=>({...j,equipoId}))});
 }
-let S={view:'login',team:null,sub:'home',week:0,selCell:null,selPlayer:null,repLvl:'team'};
+let S={view:'login',team:null,sub:'home',week:0,selCell:null,selPlayer:null,repLvl:'team',readOnly:false};
 
 const HOLIDAYS=new Set([
 '2026-01-01','2026-01-06','2026-02-17',
@@ -563,6 +572,7 @@ function renderLogin(app){
     '<button class="btn btn-primary btn-block" style="padding:14px;font-size:15px;" id="btnCoach">🏀 Entrenador</button>'+
     '<button class="btn btn-outline btn-block" style="padding:10px 14px;font-size:15px;border-color:#e67e22;color:#e67e22;display:flex;align-items:center;justify-content:center;gap:8px;" id="btnSchools"><img src="'+ESCUELAS_LOGO+'" style="height:26px;border-radius:4px;">Escuelas</button>'+
     '<button class="btn btn-outline btn-block" style="padding:14px;font-size:15px;border-color:var(--accent);color:var(--accent);" id="btnAdmin">⚙️ Coordinadores</button>'+
+    '<button class="btn btn-outline btn-block" style="padding:12px 14px;font-size:14px;border-color:var(--text3);color:var(--text2);" id="btnDirectiva">👁 Directiva (solo consulta)</button>'+
     '</div>'+
     '<div id="syncStatus" style="margin-top:16px;font-size:11px;color:var(--text3);">Conectando con la base de datos...</div>'+'<button id="installAppBtn" style="display:none;margin-top:14px;background:var(--bg3);border:1px solid var(--line2);color:var(--text);padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;width:100%;">Instalar aplicacion</button>'+
     '<div style="margin-top:20px;font-size:10px;color:var(--text3);font-style:italic;">Creado por Chico Almeida</div>';
@@ -589,7 +599,7 @@ function renderLogin(app){
         }
       });
       if(!myTeams.length){toast('Clave no encontrada');return;}
-      S.role='coach';S.coachPwd=pwd;S.view='teamlist';S.teamListData=myTeams;render();
+      S.role='coach';S.readOnly=false;S.coachPwd=pwd;S.view='teamlist';S.teamListData=myTeams;render();
     });
   };
 
@@ -611,8 +621,17 @@ function renderLogin(app){
   s.querySelector('#btnAdmin').onclick=function(){
     showPwdModal('Clave de Coordinadores',function(pwd){
       if(pwd!==(DB.adminPwd||'144')){toast('Clave incorrecta');return;}
-      S.role='admin';S.view='adminhome';render();
+      S.role='admin';S.readOnly=false;S.view='adminhome';render();
       setTimeout(function(){openAdminMenu();},50);
+    });
+  };
+
+  // Directiva: solo consulta, nunca puede guardar/borrar nada
+  s.querySelector('#btnDirectiva').onclick=function(){
+    showPwdModal('Clave de Directiva',function(pwd){
+      if(pwd!==(DB.directivaPwd||'144D')){toast('Clave incorrecta');return;}
+      S.role='admin';S.readOnly=true;S.view='teamlist';S.teamListData=DB.teams;render();
+      toast('👁 Acceso de solo consulta — no se puede modificar nada');
     });
   };
 
@@ -641,7 +660,7 @@ function renderAdminHome(app){
     '<button class="btn btn-primary btn-block" id="ahOpenMenu">⚙️ Abrir menú de Coordinadores</button>'+
     '</div>';
   app.appendChild(content);
-  app.querySelector('#ahBack').onclick=function(){S.view='login';S.role=null;render();};
+  app.querySelector('#ahBack').onclick=function(){S.view='login';S.role=null;S.readOnly=false;render();};
   app.querySelector('#ahOpenMenu').onclick=function(){openAdminMenu();};
 }
 
@@ -649,8 +668,11 @@ function renderTeamList(app){
   var teams=(S.teamListData||DB.teams).slice().sort(function(a,b){return categoryRank(a.category)-categoryRank(b.category);});
   var hdr=el('div','header');
   hdr.innerHTML='<h1>BB Baloncesto Badajoz</h1>';
-  if(S.role==='admin'){
+  if(S.role==='admin'&&!S.readOnly){
     hdr.innerHTML+='<button class="btn btn-sm" style="color:#fff;border:1px solid rgba(255,255,255,.3);font-size:10px;padding:4px 8px;" id="tlAdmin">Admin</button>';
+  }
+  if(S.role==='admin'&&S.readOnly){
+    hdr.innerHTML+='<span class="btn btn-sm" style="color:var(--text2);border:1px solid rgba(255,255,255,.25);font-size:10px;padding:4px 8px;">👁 Solo consulta</span>';
   }
   if(S.role==='coach'){
     hdr.innerHTML+='<button class="btn btn-sm" style="color:#fff;border:1px solid rgba(255,255,255,.3);font-size:10px;padding:4px 8px;" id="tlChgPwd">Cambiar clave</button>';
@@ -688,7 +710,7 @@ function renderTeamList(app){
   });
 
   var backBtn=app.querySelector('#tlBack');
-  if(backBtn)backBtn.onclick=function(){S.view='login';S.role=null;render();};
+  if(backBtn)backBtn.onclick=function(){S.view='login';S.role=null;S.readOnly=false;render();};
 
   var adminBtn=app.querySelector('#tlAdmin');
   if(adminBtn)adminBtn.onclick=function(){S.view='adminhome';render();setTimeout(function(){openAdminMenu();},50);};
@@ -787,7 +809,7 @@ function rHome(c){
   const t=T();const np=t.players.length;const days=Object.keys(t.trainingSessions).length;
   const avg=np?Math.round(t.players.reduce((a,p)=>a+calcAtt(t,p.id).pct,0)/np):0;
   const dayFull={'L':'Lun','M':'Mar','X':'Mié','J':'Jue','V':'Vie','S':'Sáb','D':'Dom'};
-  const schedTxt=(t.weeklySchedule||[]).length?(t.weeklySchedule||[]).map(function(s){return dayFull[s.day]+(s.time?' '+s.time:'')+(s.pavilion?' ('+s.pavilion+')':'');}).join(' · '):'';
+  const schedTxt=(t.weeklySchedule||[]).length?(t.weeklySchedule||[]).map(function(s){var hr=s.startTime?(' '+s.startTime+(s.endTime?'-'+s.endTime:'')):'';return dayFull[s.day]+hr+(s.pavilion?' ('+s.pavilion+')':'');}).join(' · '):'';
   c.innerHTML=`<div class="kpi-row">
     <div class="kpi"><div class="val">${np}</div><div class="lbl">Jugadores</div></div>
     <div class="kpi"><div class="val">${days}</div><div class="lbl">Días registrados</div></div>
@@ -796,7 +818,7 @@ function rHome(c){
   </div><div class="card" style="padding:10px 14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div><span style="font-size:11px;color:var(--text3);">Entrenador/a:</span> <span style="font-weight:600;font-size:13px;">${(function(){var c=(DB.coaches||[]).find(function(x){return(x.teams||[]).indexOf(t.id)>=0;});if(c)return c.name;var cc=[t.coach1,t.coach2].filter(function(x){return x;}).join(' / ');return cc||'Sin asignar';})()}</span></div>
-        <button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="editTeamSettings()">Ajustes</button>
+        ${S.readOnly?'':'<button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="editTeamSettings()">Ajustes</button>'}
       </div>
       ${schedTxt?'<div style="font-size:11px;color:var(--text2);margin-top:6px;">🗓 '+schedTxt+'</div>':''}
     </div>
@@ -812,7 +834,7 @@ function rHome(c){
 
 function rPlayers(c){
   const t=T();
-  c.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div class="section-title" style="margin:0;">${t.players.length} jugadores</div><button class="btn btn-primary btn-sm" id="addP">+ Añadir</button><button class="btn btn-outline btn-sm" id="impXls" style="margin-left:4px;">📥 Importar Excel</button></div>`;
+  c.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div class="section-title" style="margin:0;">${t.players.length} jugadores</div>${S.readOnly?'':'<button class="btn btn-primary btn-sm" id="addP">+ Añadir</button><button class="btn btn-outline btn-sm" id="impXls" style="margin-left:4px;">📥 Importar Excel</button>'}</div>`;
   const hdr=el('div','card');
   // Header
   const hdrRow=el('div','');
@@ -840,7 +862,7 @@ function rPlayers(c){
     if(thumbEl)thumbEl.onclick=function(e){e.stopPropagation();showPhotoLightbox(p.photo,p.name);};
     hdr.appendChild(d);
   });c.appendChild(hdr);
-  $('#addP').onclick=()=>showPM();
+  if($('#addP'))$('#addP').onclick=()=>showPM();
   if($('#impXls'))$('#impXls').onclick=()=>showExcelImport();
 }
 
@@ -857,25 +879,25 @@ function rPlayerDetail(c){
     <div class="card"><div style="display:flex;gap:10px;align-items:stretch;">
       <div style="flex:1;min-width:0;">
         <div style="font-weight:700;font-size:12px;margin-bottom:6px;">Datos</div>
-        <div style="margin-bottom:4px;"><label style="font-size:8px;color:var(--text3);">Nombre</label><input id="fName" value="${p.name||''}" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="Nombre"></div>
+        <div style="margin-bottom:4px;"><label style="font-size:8px;color:var(--text3);">Nombre</label><input id="fName" value="${p.name||''}" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="Nombre" ${S.readOnly?'disabled':''}></div>
         <div style="display:flex;gap:4px;margin-bottom:4px;">
-          <div style="flex:1;"><label style="font-size:8px;color:var(--text3);">Dorsal</label><input id="fDorsal" type="number" value="${p.dorsal}" style="padding:3px 5px;font-size:11px;height:28px;"></div>
-          <div style="flex:1;"><label style="font-size:8px;color:var(--text3);">Año nac.</label><input id="fYear" type="number" value="${p.birthYear||''}" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="2012"></div>
+          <div style="flex:1;"><label style="font-size:8px;color:var(--text3);">Dorsal</label><input id="fDorsal" type="number" value="${p.dorsal}" style="padding:3px 5px;font-size:11px;height:28px;" ${S.readOnly?'disabled':''}></div>
+          <div style="flex:1;"><label style="font-size:8px;color:var(--text3);">Año nac.</label><input id="fYear" type="number" value="${p.birthYear||''}" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="2012" ${S.readOnly?'disabled':''}></div>
         </div>
-        <div style="margin-bottom:4px;"><label style="font-size:8px;color:var(--text3);">Teléfono</label><input id="fPhone" value="${p.phone||''}" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="Teléfono"></div>
-        <div style="margin-bottom:4px;"><label style="font-size:8px;color:var(--text3);">Email</label><input id="fEmail" value="${p.email||''}" type="email" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="Email"></div>
-        <button class="btn btn-primary btn-sm" style="margin-top:2px;padding:4px 8px;font-size:10px;" onclick="savePlayerData('${p.id}')">Guardar</button>
+        <div style="margin-bottom:4px;"><label style="font-size:8px;color:var(--text3);">Teléfono</label><input id="fPhone" value="${p.phone||''}" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="Teléfono" ${S.readOnly?'disabled':''}></div>
+        <div style="margin-bottom:4px;"><label style="font-size:8px;color:var(--text3);">Email</label><input id="fEmail" value="${p.email||''}" type="email" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="Email" ${S.readOnly?'disabled':''}></div>
+        ${S.readOnly?'':'<button class="btn btn-primary btn-sm" style="margin-top:2px;padding:4px 8px;font-size:10px;" onclick="savePlayerData(\''+p.id+'\')">Guardar</button>'}
       </div>
       <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
         <div id="photoPreview" style="width:130px;height:150px;border-radius:12px;background:var(--bg4);border:2px dashed var(--line2);display:flex;align-items:center;justify-content:center;overflow:hidden;">
           ${p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">':'<span style="font-size:10px;color:var(--text3);text-align:center;padding:4px;">Sin foto</span>'}
         </div>
-        <input type="file" id="photoCam" accept="image/*" capture style="display:none;" onchange="handlePhoto(this,'${p.id}')">
+        ${S.readOnly?'':`<input type="file" id="photoCam" accept="image/*" capture style="display:none;" onchange="handlePhoto(this,'${p.id}')">
         <input type="file" id="photoGal" accept="image/*" style="display:none;" onchange="handlePhoto(this,'${p.id}')">
         <div style="display:flex;gap:4px;margin-top:4px;">
           <button class="btn btn-outline btn-sm" style="font-size:9px;padding:4px 6px;" onclick="event.preventDefault();document.getElementById('photoCam').value='';document.getElementById('photoCam').click();">📷 Cámara</button>
           <button class="btn btn-outline btn-sm" style="font-size:9px;padding:4px 6px;" onclick="event.preventDefault();document.getElementById('photoGal').value='';document.getElementById('photoGal').click();">🖼 Galería</button>
-        </div>
+        </div>`}
       </div>
     </div></div>
     <div class="section-title">Estadísticas (solo lectura)</div>
@@ -903,15 +925,15 @@ function rPlayerDetail(c){
         '<div class="report-row" style="border-top:1px solid var(--accent);margin-top:4px;padding-top:6px;"><span class="rlbl" style="font-weight:700;">TOTAL ADICIONAL</span><span class="rval" style="color:var(--accent);">'+m+':'+String(s).padStart(2,'0')+' · '+tPts+' pts</span></div></div>';
     })()}
     <div class="card"><div style="font-weight:700;font-size:13px;margin-bottom:8px;">Observaciones</div>
-    <textarea id="obsField" style="width:100%;min-height:80px;background:var(--bg3);color:var(--text);border:1px solid var(--line2);border-radius:6px;padding:10px;font-size:13px;resize:vertical;" placeholder="Escribe observaciones sobre la jugadora...">${p.obs||''}</textarea>
-    <button class="btn btn-primary btn-sm" style="margin-top:6px;" onclick="saveObs('${p.id}')">Guardar observaciones</button></div>
+    <textarea id="obsField" style="width:100%;min-height:80px;background:var(--bg3);color:var(--text);border:1px solid var(--line2);border-radius:6px;padding:10px;font-size:13px;resize:vertical;" placeholder="Escribe observaciones sobre la jugadora..." ${S.readOnly?'disabled':''}>${p.obs||''}</textarea>
+    ${S.readOnly?'':'<button class="btn btn-primary btn-sm" style="margin-top:6px;" onclick="saveObs(\''+p.id+'\')">Guardar observaciones</button>'}</div>
     <div class="card"><div style="font-weight:700;font-size:13px;margin-bottom:8px;">Asistencias</div>
     ${CODES.filter(cd=>cd.c&&(a.bk[cd.c]||0)>0).map(cd=>`<div class="stat-bar"><div class="top"><span class="lbl">${cd.l} (${cd.c})</span><span class="val">${a.bk[cd.c]}</span></div><div class="track"><div class="fill" style="width:${Math.min(a.bk[cd.c]/Math.max(a.teamDays,1)*100,100)}%;${cd.c==='O'?'background:var(--red)':cd.c==='B'?'background:var(--gold)':''}"></div></div></div>`).join('')}</div>
     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
     <button class="btn btn-outline btn-sm" style="border-color:var(--accent2);color:var(--accent2);" onclick="generatePlayerReport('${p.id}')">📄 Informe completo</button>
     <button class="btn btn-outline btn-sm" style="border-color:var(--green);color:var(--green);" onclick="compartirFicha('${p.id}','whatsapp')">📤 WhatsApp</button>
     <button class="btn btn-outline btn-sm" style="border-color:var(--red);color:var(--red);" onclick="compartirFicha('${p.id}','email')">📧 Email</button>
-    <button class="btn btn-danger btn-sm" onclick="delP('${p.id}')">Eliminar</button></div>`;
+    ${S.readOnly?'':'<button class="btn btn-danger btn-sm" onclick="delP(\''+p.id+'\')">Eliminar</button>'}</div>`;
 }
 
 function showPM(eid){
@@ -1037,6 +1059,7 @@ function rAttendance(c){
     const h=el('div',cls);
     h.innerHTML=`${DIAS[i]}<br>${d.getDate()}`;
     h.onclick=()=>{
+      if(S.readOnly){toast('🔒 Solo lectura: la directiva no puede modificar datos');return;}
       if(!t.trainingDays) t.trainingDays={};
       const willBeTraining=!t.trainingDays[dstr];
       if(willBeTraining&&dstr>ds(new Date())){toast('No se puede marcar un día futuro como entrenado');return;}
@@ -1059,7 +1082,7 @@ function rAttendance(c){
     days.forEach(d=>{const dstr=ds(d);const sess=t.trainingSessions[dstr]||{};const v=sess[p.id]||'';const cell=el('div','cal-cell');const codes=String(v).split(',').filter(x=>x);
       if(codes.length>1){cell.innerHTML=codes.map(c=>c==='P'?'🏀':'<span>'+c+'</span>').join('');cell.style.fontSize='8px';cell.style.lineHeight='1.1';}
       else{cell.textContent=v==='P'?'🏀':v;}
-      cell.dataset.val=codes[0]||'';cell.onclick=()=>{S.selCell={pid:p.id,date:dstr};$$('.cal-cell',c).forEach(x=>x.style.outline='');cell.style.outline='2px solid var(--accent)';$('#cPicker').classList.add('active');};grid.appendChild(cell);});
+      cell.dataset.val=codes[0]||'';cell.onclick=()=>{if(S.readOnly){toast('🔒 Solo lectura: la directiva no puede modificar datos');return;}S.selCell={pid:p.id,date:dstr};$$('.cal-cell',c).forEach(x=>x.style.outline='');cell.style.outline='2px solid var(--accent)';$('#cPicker').classList.add('active');};grid.appendChild(cell);});
   });
   // Row de totales: jugadoras en pista por día
   grid.appendChild(el('div','cal-name','<span style="color:var(--accent);font-weight:800;font-size:10px;">EN PISTA</span>'));
@@ -1083,15 +1106,16 @@ function rAttendance(c){
 
 function rGames(c){
   const t=T();
-  c.innerHTML=`<div style="display:flex;gap:8px;margin-bottom:12px;"><button class="btn btn-primary btn-sm" id="aG">+ Nuevo partido</button><button class="btn btn-outline btn-sm" id="iG">📥 Importar Excel/CSV</button></div>`;
+  c.innerHTML=S.readOnly?'':'<div style="display:flex;gap:8px;margin-bottom:12px;"><button class="btn btn-primary btn-sm" id="aG">+ Nuevo partido</button><button class="btn btn-outline btn-sm" id="iG">📥 Importar Excel/CSV</button></div>';
   if(!t.games.length)c.innerHTML+='<div class="card" style="text-align:center;color:var(--text3);padding:16px;">Sin partidos</div>';
   else t.games.sort((a,b)=>normDate(b.date).localeCompare(normDate(a.date))).forEach(g=>{
     const pts=g.players.reduce((a,p)=>a+(p.points||0),0);
     const rp=g.rivalPoints||0;
     const won=pts>rp;
-    c.innerHTML+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:13px;">${normDate(g.date)}</div><div style="font-size:12px;color:var(--text2);">vs ${g.opponent}</div></div><div style="text-align:right;"><div style="font-size:22px;font-weight:800;color:${won?'var(--green)':'var(--red)'};">${pts} - ${rp}</div><div style="font-size:10px;color:var(--text3);">${won?'Victoria':'Derrota'}</div></div></div><div style="margin-top:6px;display:flex;gap:6px;"><button class="btn btn-outline btn-sm" onclick="showGM('${g.id}')">Editar</button><button class="btn btn-danger btn-sm" onclick="delG('${g.id}')">Borrar</button></div></div>`;
+    c.innerHTML+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:13px;">${normDate(g.date)}</div><div style="font-size:12px;color:var(--text2);">vs ${g.opponent}</div></div><div style="text-align:right;"><div style="font-size:22px;font-weight:800;color:${won?'var(--green)':'var(--red)'};">${pts} - ${rp}</div><div style="font-size:10px;color:var(--text3);">${won?'Victoria':'Derrota'}</div></div></div>${S.readOnly?'':'<div style="margin-top:6px;display:flex;gap:6px;"><button class="btn btn-outline btn-sm" onclick="showGM(\''+g.id+'\')">Editar</button><button class="btn btn-danger btn-sm" onclick="delG(\''+g.id+'\')">Borrar</button></div>'}</div>`;
   });
-  $('#aG').onclick=()=>showGM();$('#iG').onclick=()=>showImp();
+  if($('#aG'))$('#aG').onclick=()=>showGM();
+  if($('#iG'))$('#iG').onclick=()=>showImp();
 }
 
 function fmtTime(v){
@@ -1319,14 +1343,14 @@ function showImp(){
 
 function rExtraGames(c){
   const t=T();
-  c.innerHTML=`<div style="display:flex;gap:8px;margin-bottom:12px;"><button class="btn btn-primary btn-sm" id="aEG">+ Partido adicional</button></div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">Partidos que juegan tus jugadoras con otros equipos (categoría superior, selección, etc.)</div>`;
+  c.innerHTML=(S.readOnly?'':'<div style="display:flex;gap:8px;margin-bottom:12px;"><button class="btn btn-primary btn-sm" id="aEG">+ Partido adicional</button></div>')+
+    '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">Partidos que juegan tus jugadoras con otros equipos (categoría superior, selección, etc.)</div>';
   if(!t.extraGames||!t.extraGames.length)c.innerHTML+='<div class="card" style="text-align:center;color:var(--text3);padding:16px;">Sin partidos adicionales</div>';
   else (t.extraGames||[]).sort((a,b)=>b.date.localeCompare(a.date)).forEach(g=>{
     const pl=t.players.find(x=>x.id===g.playerId);
-    c.innerHTML+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:13px;">${normDate(g.date)}</div><div style="font-size:11px;color:var(--text2);">${pl?pl.name:'?'} → vs ${g.opponent}</div><div style="font-size:10px;color:var(--text3);">${g.team||'Otro equipo'}</div></div><div style="text-align:right;"><div style="font-size:16px;font-weight:800;color:var(--accent);">${fmtTime(g.minutes)}</div><div style="font-size:12px;color:var(--text2);">${g.points||0} pts</div></div></div><div style="margin-top:6px;"><button class="btn btn-danger btn-sm" onclick="delEG('${g.id}')">Borrar</button></div></div>`;
+    c.innerHTML+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:13px;">${normDate(g.date)}</div><div style="font-size:11px;color:var(--text2);">${pl?pl.name:'?'} → vs ${g.opponent}</div><div style="font-size:10px;color:var(--text3);">${g.team||'Otro equipo'}</div></div><div style="text-align:right;"><div style="font-size:16px;font-weight:800;color:var(--accent);">${fmtTime(g.minutes)}</div><div style="font-size:12px;color:var(--text2);">${g.points||0} pts</div></div></div>${S.readOnly?'':'<div style="margin-top:6px;"><button class="btn btn-danger btn-sm" onclick="delEG(\''+g.id+'\')">Borrar</button></div>'}</div>`;
   });
-  $('#aEG').onclick=()=>showEGM();
+  if($('#aEG'))$('#aEG').onclick=()=>showEGM();
 }
 window.editTeamSettings=()=>{
   
@@ -2878,7 +2902,7 @@ window.askAdminPwd=function(cb){
 
 window.openAdminMenu=function(){
     var bg=el('div','modal-bg active');
-    bg.innerHTML='<div class="modal"><h3>⚙️ Coordinadores</h3><div style="display:flex;flex-direction:column;gap:8px;"><button class="btn btn-primary btn-block" id="apCoach">👤 Entrenadores</button><button class="btn btn-primary btn-block" id="apTeams">🏀 Gestionar equipos</button><button class="btn btn-primary btn-block" id="apNewTeam">+ Crear equipo</button><button class="btn btn-primary btn-block" id="apSchools" style="background:#e67e22;">🏫 Escuelas</button><button class="btn btn-primary btn-block" id="apSched">📅 Horarios</button><button class="btn btn-primary btn-block" id="apReports">📊 Informes del club</button><button class="btn btn-primary btn-block" style="background:#8e44ad;" id="apRestore">🗄️ Restaurar backup</button><div style="margin-top:8px;border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px;"><button class="btn btn-outline btn-block" id="apChgAdminPwd">🔑 Cambiar clave Coordinadores</button><button class="btn btn-outline btn-block" id="apChgSchoolsPwd">🔑 Cambiar clave Coordinador Escuelas</button></div><button class="btn btn-outline btn-block" style="margin-top:8px;" id="apClose">Cerrar</button></div></div>';
+    bg.innerHTML='<div class="modal"><h3>⚙️ Coordinadores</h3><div style="display:flex;flex-direction:column;gap:8px;"><button class="btn btn-primary btn-block" id="apCoach">👤 Entrenadores</button><button class="btn btn-primary btn-block" id="apTeams">🏀 Gestionar equipos</button><button class="btn btn-primary btn-block" id="apNewTeam">+ Crear equipo</button><button class="btn btn-primary btn-block" id="apSchools" style="background:#e67e22;">🏫 Escuelas</button><button class="btn btn-primary btn-block" id="apSched">📅 Horarios</button><button class="btn btn-primary btn-block" id="apReports">📊 Informes del club</button><button class="btn btn-primary btn-block" style="background:#8e44ad;" id="apRestore">🗄️ Restaurar backup</button><div style="margin-top:8px;border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px;"><button class="btn btn-outline btn-block" id="apChgAdminPwd">🔑 Cambiar clave Coordinadores</button><button class="btn btn-outline btn-block" id="apChgSchoolsPwd">🔑 Cambiar clave Coordinador Escuelas</button><button class="btn btn-outline btn-block" id="apChgDirectivaPwd">🔑 Cambiar clave Directiva</button></div><button class="btn btn-outline btn-block" style="margin-top:8px;" id="apClose">Cerrar</button></div></div>';
     document.body.appendChild(bg);
     bg.onclick=function(e){if(e.target===bg)bg.remove();};
     bg.querySelector('#apClose').onclick=function(){bg.remove();};
@@ -2904,6 +2928,14 @@ window.openAdminMenu=function(){
       b3.onclick=function(e){if(e.target===b3)b3.remove();};
       b3.querySelector('#cancelSchPwdBtn').onclick=function(){b3.remove();};
       b3.querySelector('#saveSchPwdBtn').onclick=function(){DB.schoolsCoordPwd=b3.querySelector('#newSchPwdF').value.trim();saveDB(DB);b3.remove();toast('Clave de Coord. Escuelas cambiada');};
+    };
+    bg.querySelector('#apChgDirectivaPwd').onclick=function(){
+      var b4=el('div','modal-bg active');
+      b4.innerHTML='<div class="modal" style="padding:24px;"><h3 style="text-align:center;">Nueva clave Directiva</h3><div class="form-group" style="margin:12px 0;"><input id="newDirPwdF" value="'+(DB.directivaPwd||'144D')+'" style="font-size:16px;text-align:center;padding:12px;"></div><div style="display:flex;gap:8px;"><button class="btn btn-primary btn-block" id="saveDirPwdBtn">Guardar</button><button class="btn btn-outline" id="cancelDirPwdBtn">Cancelar</button></div></div>';
+      document.body.appendChild(b4);
+      b4.onclick=function(e){if(e.target===b4)b4.remove();};
+      b4.querySelector('#cancelDirPwdBtn').onclick=function(){b4.remove();};
+      b4.querySelector('#saveDirPwdBtn').onclick=function(){DB.directivaPwd=b4.querySelector('#newDirPwdF').value.trim();saveDB(DB);b4.remove();toast('Clave de Directiva cambiada');};
     };
 };
 
