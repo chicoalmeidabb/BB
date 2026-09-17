@@ -453,11 +453,12 @@ function _applyCoachSelection(teamId,role,newCoachId){
   });
 }
 function teamRank(name){
-  var n=(name||'').toUpperCase();
-  var order=['BENJAMIN','PREMINI','MINI','INFANTIL','CADETE','JUNIOR','SENIOR','NACIONAL','TERCERAFEB','SEGUNDAFEB','PRIMERAFEB','FEB'];
-  var rank=order.length;
-  order.forEach(function(o,i){if(n.indexOf(o)>=0&&i<rank)rank=i;});
-  return rank;
+  var n=(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+  var cats=['BENJAMIN','PREMINI','MINI','INFANTIL','CADETE','JUNIOR','SENIOR','NACIONAL','DIPUTACION','TERCERAFEB','SEGUNDAFEB','PRIMERAFEB','FEB'];
+  var catRank=cats.length;
+  cats.forEach(function(o,i){if(n.indexOf(o)>=0&&i<catRank)catRank=i;});
+  var genRank=n.indexOf('FEMEN')>=0?0:(n.indexOf('MASCUL')>=0?1:0.5);
+  return catRank*10+genRank;
 }
 function calcAtt(team,pid){
   const bk={};CODES.forEach(c=>{if(c.c)bk[c.c]=0;});
@@ -638,7 +639,7 @@ function renderLogin(app){
       var myTeams=[];
       // Check coach passwords
       (DB.coaches||[]).forEach(function(c){
-        if(c.password===pwd){
+        if(String(c.password)===String(pwd)&&pwd!==''){
           (c.teams||[]).forEach(function(tid){
             var t=DB.teams.find(function(x){return x.id===tid;});
             if(t)myTeams.push(t);
@@ -664,7 +665,7 @@ function renderLogin(app){
       if(pwd===(DB.schoolsCoordPwd||'144E')||pwd===(DB.adminPwd||'144')){
         S.schoolsRole='coord';S.view='schoolslist';render();return;
       }
-      var mySchool=DB.schools.find(function(s){return s.password===pwd;});
+      var mySchool=DB.schools.find(function(s){return String(s.password)===String(pwd)&&pwd!=='';});
       if(mySchool){S.schoolsRole='monitor';S.mySchoolId=mySchool.id;S.view='schoolslist';render();return;}
       toast('Clave no encontrada');
     });
@@ -774,7 +775,7 @@ function renderTeamList(app){
       if(!newPwd){toast('Clave vacía');return;}
       // Update password in coaches
       (DB.coaches||[]).forEach(function(c){
-        if(c.password===S.coachPwd){c.password=newPwd;S.coachPwd=newPwd;}
+        if(String(c.password)===String(S.coachPwd)){c.password=newPwd;S.coachPwd=newPwd;}
       });
       // Update in teams
       DB.teams.forEach(function(t){
@@ -802,7 +803,10 @@ function renderSetup(app){
     <button class="btn btn-outline btn-block" style="margin-top:8px;" onclick="S.view='login';render();">Cancelar</button>`;
   app.appendChild(s);
   $('#crBtn').onclick=async()=>{const n=$('#sN').value.trim();if(!n)return toast('Nombre obligatorio');
-    if(DB.teams.some(function(t){return t.name.toLowerCase()===n.toLowerCase();})){toast('Ya existe un equipo con ese nombre');return;}
+    const btn0=$('#crBtn');btn0.disabled=true;btn0.textContent='Comprobando...';
+    await syncFromCloud().catch(function(){});
+    btn0.disabled=false;btn0.textContent='Crear';
+    if(DB.teams.some(function(t){return t.name.toLowerCase()===n.toLowerCase();})){toast('Ya existe un equipo con ese nombre (puede que se creara desde otro dispositivo)');return;}
     const coach1Id=$('#sCoach1').value,coach2Id=$('#sCoach2').value;
     const team={id:gid(),name:n,players:[],trainingSessions:{},games:[],extraGames:[],trainingDays:{}};
     DB.teams.push(team);
