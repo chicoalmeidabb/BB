@@ -277,6 +277,11 @@ async function syncFromCloud(){
   });
   DB.teams=Object.values(teamMap);
   if(d.entrenadores)DB.coaches=_hydrateCoaches(d.entrenadores);
+  if(d.config){
+    if(d.config.adminPwd)DB.adminPwd=d.config.adminPwd;
+    if(d.config.schoolsCoordPwd)DB.schoolsCoordPwd=d.config.schoolsCoordPwd;
+    if(d.config.directivaPwd)DB.directivaPwd=d.config.directivaPwd;
+  }
   saveDB(DB);
   // Status updated by init() after render
   return true;
@@ -3139,7 +3144,7 @@ window.openAdminMenu=function(){
       document.body.appendChild(b2);
       b2.onclick=function(e){if(e.target===b2)b2.remove();};
       b2.querySelector('#cancelAdminPwdBtn').onclick=function(){b2.remove();};
-      b2.querySelector('#saveAdminPwdBtn').onclick=function(){DB.adminPwd=b2.querySelector('#newAdminPwdF').value.trim();saveDB(DB);b2.remove();toast('Clave de Coordinadores cambiada');};
+      b2.querySelector('#saveAdminPwdBtn').onclick=async function(){var v=b2.querySelector('#newAdminPwdF').value.trim();if(!v)return;DB.adminPwd=v;saveDB(DB);b2.remove();var r=await gsPost({action:'guardarConfig',adminPwd:v});toast(r&&r.ok?'✓ Clave de Coordinadores cambiada para todos los dispositivos':'⚠ Se guardó aquí pero no en la nube. Revisa tu conexión.');};
     };
     bg.querySelector('#apChgSchoolsPwd').onclick=function(){
       var b3=el('div','modal-bg active');
@@ -3147,7 +3152,7 @@ window.openAdminMenu=function(){
       document.body.appendChild(b3);
       b3.onclick=function(e){if(e.target===b3)b3.remove();};
       b3.querySelector('#cancelSchPwdBtn').onclick=function(){b3.remove();};
-      b3.querySelector('#saveSchPwdBtn').onclick=function(){DB.schoolsCoordPwd=b3.querySelector('#newSchPwdF').value.trim();saveDB(DB);b3.remove();toast('Clave de Coord. Escuelas cambiada');};
+      b3.querySelector('#saveSchPwdBtn').onclick=async function(){var v=b3.querySelector('#newSchPwdF').value.trim();if(!v)return;DB.schoolsCoordPwd=v;saveDB(DB);b3.remove();var r=await gsPost({action:'guardarConfig',schoolsCoordPwd:v});toast(r&&r.ok?'✓ Clave de Coord. Escuelas cambiada para todos los dispositivos':'⚠ Se guardó aquí pero no en la nube. Revisa tu conexión.');};
     };
     bg.querySelector('#apChgDirectivaPwd').onclick=function(){
       var b4=el('div','modal-bg active');
@@ -3155,7 +3160,7 @@ window.openAdminMenu=function(){
       document.body.appendChild(b4);
       b4.onclick=function(e){if(e.target===b4)b4.remove();};
       b4.querySelector('#cancelDirPwdBtn').onclick=function(){b4.remove();};
-      b4.querySelector('#saveDirPwdBtn').onclick=function(){DB.directivaPwd=b4.querySelector('#newDirPwdF').value.trim();saveDB(DB);b4.remove();toast('Clave de Directiva cambiada');};
+      b4.querySelector('#saveDirPwdBtn').onclick=async function(){var v=b4.querySelector('#newDirPwdF').value.trim();if(!v)return;DB.directivaPwd=v;saveDB(DB);b4.remove();var r=await gsPost({action:'guardarConfig',directivaPwd:v});toast(r&&r.ok?'✓ Clave de Directiva cambiada para todos los dispositivos':'⚠ Se guardó aquí pero no en la nube. Revisa tu conexión.');};
     };
 };
 
@@ -3211,6 +3216,11 @@ async function init(){
         });
         DB.teams=Object.values(teamMap);
         if(res.data.entrenadores)DB.coaches=_hydrateCoaches(res.data.entrenadores);
+        if(res.data.config){
+          if(res.data.config.adminPwd)DB.adminPwd=res.data.config.adminPwd;
+          if(res.data.config.schoolsCoordPwd)DB.schoolsCoordPwd=res.data.config.schoolsCoordPwd;
+          if(res.data.config.directivaPwd)DB.directivaPwd=res.data.config.directivaPwd;
+        }
         saveDB(DB);
         const _savedSel=document.getElementById('selTeam')?.value||'';
         render();
