@@ -187,41 +187,6 @@ function _tryLoginCoach(pwd,preserveView){
   if(!preserveView)S.view='teamlist';
   return true;
 }
-function tryRestoreSession(){
-  var sess=loadSession();
-  if(!sess||!sess.type)return false;
-  var alreadyLoggedIn=!!S.role||!!S.schoolsRole;
-  if(sess.type==='coach'){
-    var ok=_tryLoginCoach(sess.pwd,alreadyLoggedIn);
-    return ok;
-  }
-  if(sess.type==='admin'){
-    if(sess.pwd!==(DB.adminPwd||'144'))return false;
-    S.role='admin';S.readOnly=false;S.teamListData=DB.teams;
-    if(!alreadyLoggedIn)S.view='teamlist';
-    return true;
-  }
-  if(sess.type==='directiva'){
-    if(sess.pwd!==(DB.directivaPwd||'144D'))return false;
-    S.role='admin';S.readOnly=true;S.teamListData=DB.teams;
-    if(!alreadyLoggedIn)S.view='teamlist';
-    return true;
-  }
-  if(sess.type==='schoolsCoord'){
-    if(sess.pwd!==(DB.schoolsCoordPwd||'144E')&&sess.pwd!==(DB.adminPwd||'144'))return false;
-    S.schoolsRole='coord';
-    if(!alreadyLoggedIn)S.view='schoolslist';
-    return true;
-  }
-  if(sess.type==='schoolsMonitor'){
-    var mySchool=(DB.schools||[]).find(function(s){return String(s.password)===String(sess.pwd)&&sess.pwd!=='';});
-    if(!mySchool)return false;
-    S.schoolsRole='monitor';S.mySchoolId=mySchool.id;
-    if(!alreadyLoggedIn)S.view='schoolslist';
-    return true;
-  }
-  return false;
-}
 window.logout=function(){
   clearSession();
   S.role=null;S.readOnly=false;S.team=null;S.schoolsRole=null;S.coachPwd=null;S.mySchoolId=null;S.view='login';
@@ -696,8 +661,10 @@ function renderLogin(app){
     '<div style="margin-top:20px;"></div>';
   app.appendChild(s);
 
-  // Entrenador: pide clave → muestra sus equipos
+  // Entrenador: pide clave → muestra sus equipos (o entra directo si ya hay sesión guardada)
   s.querySelector('#btnCoach').onclick=function(){
+    var sess=loadSession();
+    if(sess&&sess.type==='coach'&&_tryLoginCoach(sess.pwd)){render();return;}
     showPwdModal('Clave de entrenador',function(pwd){
       if(!_tryLoginCoach(pwd)){toast('Clave no encontrada');return;}
       saveSession({type:'coach',pwd:pwd});
@@ -708,6 +675,15 @@ function renderLogin(app){
 
   // Escuelas: clave de sede o coordinador de escuelas
   s.querySelector('#btnSchools').onclick=function(){
+    if(!DB.schools)DB.schools=[];
+    var sess=loadSession();
+    if(sess&&sess.type==='schoolsCoord'&&(sess.pwd===(DB.schoolsCoordPwd||'144E')||sess.pwd===(DB.adminPwd||'144'))){
+      S.schoolsRole='coord';S.view='schoolslist';render();return;
+    }
+    if(sess&&sess.type==='schoolsMonitor'){
+      var savedSchool=DB.schools.find(function(sc){return String(sc.password)===String(sess.pwd)&&sess.pwd!=='';});
+      if(savedSchool){S.schoolsRole='monitor';S.mySchoolId=savedSchool.id;S.view='schoolslist';render();return;}
+    }
     showPwdModal('Clave de Escuelas',function(pwd){
       if(!DB.schools)DB.schools=[];
       if(pwd===(DB.schoolsCoordPwd||'144E')||pwd===(DB.adminPwd||'144')){
@@ -721,6 +697,12 @@ function renderLogin(app){
 
   // Administrador
   s.querySelector('#btnAdmin').onclick=function(){
+    var sess=loadSession();
+    if(sess&&sess.type==='admin'&&sess.pwd===(DB.adminPwd||'144')){
+      S.role='admin';S.readOnly=false;S.view='adminhome';render();
+      setTimeout(function(){openAdminMenu();},50);
+      return;
+    }
     showPwdModal('Clave de Coordinadores',function(pwd){
       if(pwd!==(DB.adminPwd||'144')){toast('Clave incorrecta');return;}
       S.role='admin';S.readOnly=false;S.view='adminhome';saveSession({type:'admin',pwd:pwd});render();
@@ -730,6 +712,11 @@ function renderLogin(app){
 
   // Directiva: solo consulta, nunca puede guardar/borrar nada
   s.querySelector('#btnDirectiva').onclick=function(){
+    var sess=loadSession();
+    if(sess&&sess.type==='directiva'&&sess.pwd===(DB.directivaPwd||'144D')){
+      S.role='admin';S.readOnly=true;S.view='teamlist';S.teamListData=DB.teams;render();
+      return;
+    }
     showPwdModal('Clave de Directiva',function(pwd){
       if(pwd!==(DB.directivaPwd||'144D')){toast('Clave incorrecta');return;}
       S.role='admin';S.readOnly=true;S.view='teamlist';S.teamListData=DB.teams;saveSession({type:'directiva',pwd:pwd});render();
@@ -3177,7 +3164,6 @@ window.showAdminPanel=function(){
 };
 
 async function init(){
-  tryRestoreSession();
   render();
   if(CONFIG_URL_GOOGLE_SHEETS!=='AQUÍ_IRÁ_EL_ENLACE'){
     const st=()=>document.getElementById('syncStatus');
@@ -3226,7 +3212,6 @@ async function init(){
         DB.teams=Object.values(teamMap);
         if(res.data.entrenadores)DB.coaches=_hydrateCoaches(res.data.entrenadores);
         saveDB(DB);
-        if(loadSession())tryRestoreSession();
         const _savedSel=document.getElementById('selTeam')?.value||'';
         render();
         const _restoredSel=document.getElementById('selTeam');
