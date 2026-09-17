@@ -250,7 +250,7 @@ async function syncFromCloud(){
   });
   (d.jugadores||[]).forEach(j=>{
     if(!teamMap[j.equipoId])return;
-    teamMap[j.equipoId].players.push({id:j.id,name:j.nombre,dorsal:parseInt(j.dorsal)||0,birthYear:j.anioNacimiento||'',phone:j.telefono||'',email:j.email||'',obs:j.obs||'',photo:j.photoUrl||j.photo||_getLocalPhoto(j.id)||''});
+    teamMap[j.equipoId].players.push({id:j.id,name:j.nombre,dorsal:parseInt(j.dorsal)||0,birthYear:j.anioNacimiento||'',phone:j.telefono||'',email:j.email||'',obs:j.obs||'',photo:j.photoUrl||j.photo||_getLocalPhoto(j.id)||'',fatherName:j.nombrePadre||'',fatherPhone:j.telefonoPadre||'',fatherEmail:j.emailPadre||'',motherName:j.nombreMadre||'',motherPhone:j.telefonoMadre||'',motherEmail:j.emailMadre||''});
   });
   (d.asistencia||[]).forEach(a=>{
     if(!teamMap[a.equipoId])return;
@@ -341,7 +341,9 @@ async function syncCrearEquipo(team){
   return await gsPost({action:'crearEquipo',id:team.id,nombre:team.name,categoria:team.category,claveEntrenador:team.coachCode,claveDirector:team.directorCode,coach1:team.coach1||'',coach2:team.coach2||'',horario:JSON.stringify(team.weeklySchedule||[])});
 }
 async function syncGuardarJugador(equipoId,p){
-  await gsPost({action:'guardarJugador',id:p.id,equipoId:equipoId,nombre:p.name,dorsal:p.dorsal,anioNacimiento:p.birthYear,telefono:p.phone,email:p.email});
+  await gsPost({action:'guardarJugador',id:p.id,equipoId:equipoId,nombre:p.name,dorsal:p.dorsal,anioNacimiento:p.birthYear,telefono:p.phone,email:p.email,
+    nombrePadre:p.fatherName||'',telefonoPadre:p.fatherPhone||'',emailPadre:p.fatherEmail||'',
+    nombreMadre:p.motherName||'',telefonoMadre:p.motherPhone||'',emailMadre:p.motherEmail||''});
 }
 async function syncEliminarJugador(id){
   await gsPost({action:'eliminarJugador',id:id});
@@ -649,6 +651,8 @@ function render(){
   else if(S.view==='schooldetail')renderSchoolDetail(app);
   else if(S.view==='coachlist')renderCoachList(app);
   else renderMain(app);
+  var sigEl=document.getElementById('appSignature');
+  if(sigEl)sigEl.style.bottom=$('.tabs')?'62px':'6px';
 }
 
 function renderLogin(app){
@@ -929,8 +933,12 @@ function rHome(c){
 function rPlayers(c){
   const t=T();
   const cc=_coachesForTeam(t.id);
-  const coachNames=[cc.c1,cc.c2].filter(function(x){return x;}).map(function(x){return x.name;});
-  c.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Entrenador/a: <span style="color:var(--text);font-weight:600;">${coachNames.length?coachNames.join(' / '):'Sin asignar'}</span></div>
+  const coachList=[cc.c1,cc.c2].filter(function(x){return x;});
+  const coachHtml=coachList.length?coachList.map(function(co){
+    var av=co.photo?'<img src="'+co.photo+'" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;">':'<span class="avatar" style="width:22px;height:22px;font-size:9px;display:inline-flex;vertical-align:middle;margin-right:4px;">'+ini(co.name)+'</span>';
+    return av+'<span style="color:var(--text);font-weight:600;">'+co.name+'</span>';
+  }).join('&nbsp;&nbsp;/&nbsp;&nbsp;'):'Sin asignar';
+  c.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:4px;">Entrenador/a: ${coachHtml}</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div class="section-title" style="margin:0;">${t.players.length} jugadores</div>${S.readOnly?'':'<button class="btn btn-primary btn-sm" id="addP">+ Añadir</button><button class="btn btn-outline btn-sm" id="impXls" style="margin-left:4px;">📥 Importar Excel</button>'}</div>`;
   const hdr=el('div','card');
   // Header
@@ -981,8 +989,8 @@ function rPlayerDetail(c){
           <div style="flex:1;"><label style="font-size:8px;color:var(--text3);">Dorsal</label><input id="fDorsal" type="number" value="${p.dorsal}" style="padding:3px 5px;font-size:11px;height:28px;" ${S.readOnly?'disabled':''}></div>
           <div style="flex:1;"><label style="font-size:8px;color:var(--text3);">Año nac.</label><input id="fYear" type="number" value="${p.birthYear||''}" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="2012" ${S.readOnly?'disabled':''}></div>
         </div>
-        <div style="margin-bottom:4px;"><label style="font-size:8px;color:var(--text3);">Teléfono</label><input id="fPhone" value="${p.phone||''}" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="Teléfono" ${S.readOnly?'disabled':''}></div>
-        <div style="margin-bottom:4px;"><label style="font-size:8px;color:var(--text3);">Email</label><input id="fEmail" value="${p.email||''}" type="email" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="Email" ${S.readOnly?'disabled':''}></div>
+        <div style="margin-bottom:4px;"><label style="font-size:8px;color:var(--text3);">Teléfono jugadora</label><input id="fPhone" value="${p.phone||''}" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="Teléfono" ${S.readOnly?'disabled':''}></div>
+        <div style="margin-bottom:4px;"><label style="font-size:8px;color:var(--text3);">Email jugadora</label><input id="fEmail" value="${p.email||''}" type="email" style="padding:3px 5px;font-size:11px;height:28px;" placeholder="Email" ${S.readOnly?'disabled':''}></div>
         ${S.readOnly?'':'<button class="btn btn-primary btn-sm" style="margin-top:2px;padding:4px 8px;font-size:10px;" onclick="savePlayerData(\''+p.id+'\')">Guardar</button>'}
       </div>
       <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
@@ -997,6 +1005,21 @@ function rPlayerDetail(c){
         </div>`}
       </div>
     </div></div>
+    <div class="card"><div style="font-weight:700;font-size:12px;margin-bottom:8px;">Contacto familiar</div>
+      <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:3px;">PADRE</div>
+      <div style="display:flex;gap:4px;margin-bottom:6px;">
+        <input id="fFatherName" value="${p.fatherName||''}" style="flex:1;padding:3px 5px;font-size:11px;height:28px;" placeholder="Nombre" ${S.readOnly?'disabled':''}>
+        <input id="fFatherPhone" value="${p.fatherPhone||''}" style="flex:1;padding:3px 5px;font-size:11px;height:28px;" placeholder="Teléfono" ${S.readOnly?'disabled':''}>
+      </div>
+      <input id="fFatherEmail" value="${p.fatherEmail||''}" type="email" style="width:100%;padding:3px 5px;font-size:11px;height:28px;margin-bottom:10px;" placeholder="Email" ${S.readOnly?'disabled':''}>
+      <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:3px;">MADRE</div>
+      <div style="display:flex;gap:4px;margin-bottom:6px;">
+        <input id="fMotherName" value="${p.motherName||''}" style="flex:1;padding:3px 5px;font-size:11px;height:28px;" placeholder="Nombre" ${S.readOnly?'disabled':''}>
+        <input id="fMotherPhone" value="${p.motherPhone||''}" style="flex:1;padding:3px 5px;font-size:11px;height:28px;" placeholder="Teléfono" ${S.readOnly?'disabled':''}>
+      </div>
+      <input id="fMotherEmail" value="${p.motherEmail||''}" type="email" style="width:100%;padding:3px 5px;font-size:11px;height:28px;" placeholder="Email" ${S.readOnly?'disabled':''}>
+      ${S.readOnly?'':'<button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="savePlayerData(\''+p.id+'\')">Guardar</button>'}
+    </div>
     <div class="section-title">Estadísticas (solo lectura)</div>
     <div class="kpi-row">
       <div class="kpi"><div class="val">${a.pct}%</div><div class="lbl">% Asistencia</div></div>
@@ -1062,6 +1085,12 @@ window.savePlayerData=id=>{
   p.birthYear=parseInt($('#fYear').value)||'';
   p.phone=$('#fPhone').value.trim();
   p.email=$('#fEmail').value.trim();
+  p.fatherName=$('#fFatherName').value.trim();
+  p.fatherPhone=$('#fFatherPhone').value.trim();
+  p.fatherEmail=$('#fFatherEmail').value.trim();
+  p.motherName=$('#fMotherName').value.trim();
+  p.motherPhone=$('#fMotherPhone').value.trim();
+  p.motherEmail=$('#fMotherEmail').value.trim();
   saveDB(DB);syncGuardarJugador(t.id,p);rc();toast('Datos guardados');
 };
 window.handlePhoto=(input,id)=>{
@@ -1147,7 +1176,16 @@ function rAttendance(c){
     </div>`;
   $('#pW',c).onclick=()=>{S.week--;rc();};$('#nW',c).onclick=()=>{S.week++;rc();};
   if(!t.players.length){c.innerHTML+='<div class="card" style="text-align:center;color:var(--text3);padding:16px;">Añade jugadores primero</div>';return;}
-  const grid=el('div','cal-grid');grid.appendChild(el('div','cal-head',''));
+  const grid=el('div','cal-grid');
+  const cornerCell=el('div','cal-head');
+  cornerCell.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px;';
+  const ccInfo=_coachesForTeam(t.id);
+  const mainCoach=ccInfo.c1||ccInfo.c2;
+  if(mainCoach){
+    cornerCell.innerHTML=(mainCoach.photo?'<img src="'+mainCoach.photo+'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">':'<span class="avatar" style="width:24px;height:24px;font-size:9px;">'+ini(mainCoach.name)+'</span>')+
+      '<span style="font-size:6.5px;line-height:1.1;margin-top:2px;text-align:center;">'+mainCoach.name.split(' ')[0]+'</span>';
+  }
+  grid.appendChild(cornerCell);
   days.forEach((d,i)=>{
     const dstr=ds(d);
     const isTD=t.trainingDays[dstr];
@@ -2256,64 +2294,93 @@ window.compartirFicha=function(pid,channel){
   });
 };
 
+function _buildPavilionGridsFromTeams(){
+  // Agrupa por el nombre exacto de pabellón (ya incluye la pista, ej. "Nuria Cabanillas 2")
+  var byPav={};
+  (DB.teams||[]).forEach(function(t){
+    (t.weeklySchedule||[]).forEach(function(s){
+      if(!s.pavilion)return;
+      if(!byPav[s.pavilion])byPav[s.pavilion]={};
+      var timeKey=(s.startTime||'?')+(s.endTime?'-'+s.endTime:'');
+      if(!byPav[s.pavilion][timeKey])byPav[s.pavilion][timeKey]={};
+      byPav[s.pavilion][timeKey][s.day]=t.name;
+    });
+  });
+  return byPav;
+}
 function rSchedule(c){
-  var scheds=DB.schedules||[];
-  if(!scheds.length){c.innerHTML='<div class="card" style="text-align:center;color:var(--text3);padding:20px;">No hay horarios configurados.<br>El administrador puede crearlos desde ⚙️ Administración.</div>';return;}
-  var days=['Lunes','Martes','Miércoles','Jueves','Viernes'];
-  var shortDays=['Lun','Mar','Mié','Jue','Vie'];
-  var colors={'MINI':'#3498db','INF':'#e67e22','CAD':'#9b59b6','JUN':'#27ae60','NACIONAL':'#e74c3c','TECNIF':'#95a5a6','BENJAMIN':'#f1c40f','PARTIDO':'#1565C0','DIPUTAC':'#8d6e63'};
+  var t=T();
+  var days=[{k:'L',l:'Lunes'},{k:'M',l:'Martes'},{k:'X',l:'Miércoles'},{k:'J',l:'Jueves'},{k:'V',l:'Viernes'},{k:'S',l:'Sábado'},{k:'D',l:'Domingo'}];
+  var mySched=t.weeklySchedule||[];
+  c.innerHTML='<div class="section-title">Horario de '+t.name+'</div>';
+  if(!mySched.length){
+    c.innerHTML+='<div class="card" style="text-align:center;color:var(--text3);padding:16px;">Este equipo todavía no tiene horario. '+(S.readOnly?'':'Se pone desde Ajustes del equipo.')+'</div>';
+  } else {
+    var cardHtml='<div class="card">';
+    days.forEach(function(d){
+      var s=mySched.find(function(x){return x.day===d.k;});
+      if(!s)return;
+      cardHtml+='<div class="report-row"><span class="rlbl" style="font-weight:700;">'+d.l+'</span><span class="rval">'+(s.startTime||'?')+(s.endTime?'-'+s.endTime:'')+(s.pavilion?' · '+s.pavilion:'')+'</span></div>';
+    });
+    cardHtml+='</div>';
+    c.innerHTML+=cardHtml;
+  }
+  if(!S.readOnly)c.innerHTML+='<button class="btn btn-outline btn-block btn-sm" style="margin-top:8px;margin-bottom:16px;" onclick="editTeamSettings()">✏️ Editar horario de este equipo</button>';
+
+  var byPav=_buildPavilionGridsFromTeams();
+  var pavNames=Object.keys(byPav);
+  if(!pavNames.length)return;
+  c.innerHTML+='<div class="section-title" style="margin-top:16px;">Todos los equipos por pabellón</div>';
+  var colors={'MINI':'#3498db','INFANTIL':'#e67e22','CADETE':'#9b59b6','JUNIOR':'#27ae60','NACIONAL':'#e74c3c','BENJAMIN':'#f1c40f','DIPUTACION':'#8d6e63','TERCERAFEB':'#1565C0'};
   function getColor(name){
     if(!name)return'transparent';
-    var n=name.toUpperCase();
+    var n=(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
     for(var k in colors){if(n.indexOf(k)>=0)return colors[k];}
     return'#555';
   }
-  scheds.forEach(function(pav){
-    c.innerHTML+='<div class="section-title">'+pav.name+'</div>';
-    var tableHtml='<div class="card" style="padding:6px;overflow-x:auto;"><table style="border-collapse:collapse;width:100%;font-size:8px;"><tr><th style="padding:3px;border:1px solid var(--line);background:var(--bg4);">Hora</th>';
-    days.forEach(function(d,di){
-      for(var cc=1;cc<=pav.courts;cc++){
-        tableHtml+='<th style="padding:3px;border:1px solid var(--line);background:var(--bg4);">'+shortDays[di]+(pav.courts>1?' P'+cc:'')+'</th>';
-      }
-    });
+  pavNames.sort().forEach(function(pavName){
+    var timeKeys=Object.keys(byPav[pavName]).sort();
+    var tableHtml='<div class="section-title" style="font-size:11px;">'+pavName+'</div>';
+    tableHtml+='<div class="card pav-grid" id="pavgrid_'+pavName.replace(/[^a-zA-Z0-9]/g,'_')+'" style="padding:6px;overflow-x:auto;"><table style="border-collapse:collapse;width:100%;font-size:8px;"><tr><th style="padding:3px;border:1px solid var(--line);background:var(--bg4);">Hora</th>';
+    days.forEach(function(d){tableHtml+='<th style="padding:3px;border:1px solid var(--line);background:var(--bg4);">'+d.l.slice(0,3)+'</th>';});
     tableHtml+='</tr>';
-    (pav.slots||[]).forEach(function(slot){
-      tableHtml+='<tr><td style="padding:2px 3px;border:1px solid var(--line);font-weight:700;white-space:nowrap;">'+slot.time+'</td>';
+    timeKeys.forEach(function(tk){
+      tableHtml+='<tr><td style="padding:2px 3px;border:1px solid var(--line);font-weight:700;white-space:nowrap;">'+tk+'</td>';
       days.forEach(function(d){
-        for(var cc=1;cc<=pav.courts;cc++){
-          var val=slot[d+'_P'+cc]||'';
-          var bg=getColor(val);
-          tableHtml+='<td style="padding:2px;border:1px solid var(--line);background:'+bg+';color:#fff;font-weight:600;text-align:center;font-size:7px;">'+val+'</td>';
-        }
+        var val=byPav[pavName][tk][d.k]||'';
+        tableHtml+='<td style="padding:2px;border:1px solid var(--line);background:'+getColor(val)+';color:#fff;font-weight:600;text-align:center;font-size:7px;">'+val+'</td>';
       });
       tableHtml+='</tr>';
     });
     tableHtml+='</table></div>';
+    tableHtml+='<button class="btn btn-outline btn-sm" style="margin-bottom:12px;" onclick="exportScheduleImage(\''+pavName.replace(/'/g,"\\'")+'\')">🖼️ Descargar imagen de '+pavName+'</button>';
     c.innerHTML+=tableHtml;
   });
-  c.innerHTML+='<button class="btn btn-outline btn-block btn-sm" style="margin-top:8px;" onclick="exportSchedule()">📄 Exportar horario</button>';
+  c.innerHTML+='<button class="btn btn-primary btn-block btn-sm" style="margin-top:8px;" onclick="exportScheduleImage(null)">🖼️ Descargar imagen general (todos los pabellones)</button>';
 }
 
-window.exportSchedule=function(){
-  var scheds=DB.schedules||[];
-  var days=['Lunes','Martes','Miércoles','Jueves','Viernes'];
-  var h='<html><head><meta charset="UTF-8"><style>body{font-family:Arial;padding:12px;}h2{color:#1565C0;}table{border-collapse:collapse;width:100%;margin-bottom:20px;font-size:10px;}th,td{border:1px solid #ccc;padding:4px;text-align:center;}th{background:#1565C0;color:#fff;}.logo{text-align:center;margin-bottom:10px;}</style></head><body>';
-  h+='<div class="logo"><img src="https://www.baloncestobadajoz.es/archivos/imagenes/logo.png" style="height:50px;"></div>';
-  h+='<h2 style="text-align:center;">BB Baloncesto Badajoz — Horarios Temporada 26-27</h2>';
-  scheds.forEach(function(pav){
-    h+='<h3>'+pav.name+'</h3><table><tr><th>Hora</th>';
-    days.forEach(function(d){for(var c=1;c<=pav.courts;c++){h+='<th>'+d+(pav.courts>1?' P'+c:'')+'</th>';}});
-    h+='</tr>';
-    (pav.slots||[]).forEach(function(slot){
-      h+='<tr><td style="font-weight:bold;">'+slot.time+'</td>';
-      days.forEach(function(d){for(var c=1;c<=pav.courts;c++){var v=slot[d+'_P'+c]||'';h+='<td style="background:'+(v?'#e3f2fd':'#fff')+';">'+v+'</td>';}});
-      h+='</tr>';
-    });
-    h+='</table>';
+window.exportScheduleImage=function(pavName){
+  _loadHtml2Canvas(function(){
+    var target;
+    if(pavName){
+      target=document.getElementById('pavgrid_'+pavName.replace(/[^a-zA-Z0-9]/g,'_'));
+    } else {
+      target=document.createElement('div');
+      target.style.position='fixed';target.style.left='-9999px';target.style.background='#fff';target.style.padding='10px';
+      document.querySelectorAll('.pav-grid').forEach(function(g){target.appendChild(g.cloneNode(true));});
+      document.body.appendChild(target);
+    }
+    if(!target){toast('No hay tabla que exportar');return;}
+    html2canvas(target,{backgroundColor:'#ffffff',scale:2}).then(function(canvas){
+      if(!pavName&&target.parentNode)document.body.removeChild(target);
+      canvas.toBlob(function(blob){
+        var fileName='Horario_'+(pavName||'General').replace(/[^a-zA-Z0-9]/g,'_')+'.jpg';
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement('a');a.href=url;a.download=fileName;a.click();
+        toast('Imagen descargada');
+      },'image/jpeg',0.92);
+    }).catch(function(){if(!pavName&&target.parentNode)document.body.removeChild(target);toast('Error generando la imagen');});
   });
-  h+='<div style="text-align:center;margin-top:12px;"><img src="'+SIGNATURE_IMG+'" style="height:26px;opacity:.6;"></div></body></html>';
-  var w=window.open('','_blank');
-  if(w){w.document.write(h);w.document.close();setTimeout(function(){w.print();},500);}
 };
 
 function rHelp(c){
@@ -2771,6 +2838,97 @@ window.showTeamPickerForReports=function(){
   });
 };
 
+// ═══ HISTÓRICO DE TEMPORADAS (solo lectura, solo Coordinadores) ═══
+var _histCache=null;
+var HIST_CODE_LABEL={'1':'Entrenó','1.0':'Entrenó','D':'Dobla','I':'Otro equipo','T':'Tecnif+Entreno','t':'Solo tecnif.','J':'Justificada','B':'Baja/lesión','E':'Enfermedad','C':'Clase','O':'No avisó','P':'Partido'};
+var HIST_MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+async function _loadHistorico(){
+  if(_histCache)return _histCache;
+  try{
+    var res=await fetch('historico_2025_26.json');
+    if(!res.ok)return null;
+    _histCache=await res.json();
+    return _histCache;
+  }catch(e){return null;}
+}
+window.showHistorico=async function(){
+  var bg=el('div','modal-bg active');
+  bg.innerHTML='<div class="modal"><h3>📜 Histórico 2025-26</h3><div id="histBody" style="max-height:68vh;overflow-y:auto;"><div style="text-align:center;color:var(--text3);padding:20px;">Cargando...</div></div><button class="btn btn-outline btn-block" style="margin-top:10px;" id="histClose">Cerrar</button></div>';
+  document.body.appendChild(bg);
+  bg.onclick=function(e){if(e.target===bg)bg.remove();};
+  bg.querySelector('#histClose').onclick=function(){bg.remove();};
+  var data=await _loadHistorico();
+  var body=bg.querySelector('#histBody');
+  if(!data){body.innerHTML='<div style="text-align:center;color:var(--red);padding:20px;">No se pudo cargar el histórico.<br>Comprueba que el archivo <code>historico_2025_26.json</code> está subido junto al index.html en GitHub.</div>';return;}
+  _showHistTeams(body,data);
+};
+function _showHistTeams(body,data){
+  var teams=data.teams.slice().sort(function(a,b){return teamRank(a.name)-teamRank(b.name)||a.name.localeCompare(b.name);});
+  var html='<div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Temporada '+data.season+' · '+teams.length+' equipos · solo lectura</div>';
+  teams.forEach(function(t){
+    html+='<div class="report-row" style="cursor:pointer;" data-histteam="'+t.name.replace(/"/g,'&quot;')+'"><span class="rlbl" style="font-weight:600;">'+t.name+'</span><span class="rval">'+t.players.length+' jug. →</span></div>';
+  });
+  body.innerHTML=html;
+  body.querySelectorAll('[data-histteam]').forEach(function(row){
+    row.onclick=function(){
+      var team=teams.find(function(t){return t.name===row.getAttribute('data-histteam');});
+      _showHistPlayers(body,data,team);
+    };
+  });
+}
+function _showHistPlayers(body,data,team){
+  var players=team.players.slice().sort(function(a,b){return(a.dorsal||999)-(b.dorsal||999);});
+  var html='<button class="btn btn-outline btn-sm" style="margin-bottom:10px;" id="histBackTeams">← Equipos</button>';
+  html+='<div style="font-weight:700;font-size:13px;margin-bottom:8px;">'+team.name+'</div>';
+  players.forEach(function(p){
+    html+='<div class="report-row" style="cursor:pointer;" data-histp="'+p.name.replace(/"/g,'&quot;')+'"><span class="rlbl">'+(p.dorsal?'#'+p.dorsal+' ':'')+p.name+'</span><span class="rval">→</span></div>';
+  });
+  body.innerHTML=html;
+  body.querySelector('#histBackTeams').onclick=function(){_showHistTeams(body,data);};
+  body.querySelectorAll('[data-histp]').forEach(function(row){
+    row.onclick=function(){_showHistPlayer(body,data,team,row.getAttribute('data-histp'));};
+  });
+}
+function _showHistPlayer(body,data,team,playerName){
+  var totals={};var byMonth={};var totalDays=0;
+  Object.keys(team.sessions).sort().forEach(function(date){
+    var code=team.sessions[date][playerName];
+    if(code===undefined)return;
+    totalDays++;
+    totals[code]=(totals[code]||0)+1;
+    var ym=date.slice(0,7);
+    if(!byMonth[ym])byMonth[ym]={};
+    byMonth[ym][code]=(byMonth[ym][code]||0)+1;
+  });
+  var entrenoCodes=['1','1.0','D','T'];
+  var entrenos=entrenoCodes.reduce(function(a,c){return a+(totals[c]||0);},0);
+  var partidos=totals['P']||0;
+  var pct=totalDays>0?Math.round(entrenos/totalDays*1000)/10:0;
+
+  var html='<button class="btn btn-outline btn-sm" style="margin-bottom:10px;" id="histBackPlayers">← '+team.name+'</button>';
+  html+='<div style="font-weight:700;font-size:14px;color:var(--accent2);margin-bottom:8px;">'+playerName+'</div>';
+  html+='<div class="kpi-row" style="margin-bottom:12px;">';
+  html+='<div class="kpi"><div class="val">'+totalDays+'</div><div class="lbl">Días registrados</div></div>';
+  html+='<div class="kpi"><div class="val">'+entrenos+'</div><div class="lbl">Entrenos con equipo</div></div>';
+  html+='<div class="kpi"><div class="val">'+pct+'%</div><div class="lbl">% Asistencia</div></div>';
+  html+='<div class="kpi"><div class="val">'+partidos+'</div><div class="lbl">Partidos</div></div>';
+  html+='</div>';
+  html+='<div style="font-weight:700;font-size:11px;margin-bottom:4px;">Desglose total</div>';
+  Object.keys(totals).sort().forEach(function(code){
+    if(!code)return;
+    html+='<div class="report-row"><span class="rlbl">'+(HIST_CODE_LABEL[code]||code)+' ('+code+')</span><span class="rval">'+totals[code]+'</span></div>';
+  });
+  html+='<div style="font-weight:700;font-size:11px;margin:12px 0 4px;">Mensual</div>';
+  Object.keys(byMonth).sort().forEach(function(ym){
+    var parts=ym.split('-');
+    var label=HIST_MESES[parseInt(parts[1])-1]+' '+parts[0];
+    var cs=Object.keys(byMonth[ym]).filter(function(x){return x;}).map(function(c){return c+':'+byMonth[ym][c];}).join('  ');
+    html+='<div class="report-row"><span class="rlbl">'+label+'</span><span class="rval" style="font-size:10px;">'+cs+'</span></div>';
+  });
+  body.innerHTML=html;
+  body.querySelector('#histBackPlayers').onclick=function(){_showHistPlayers(body,data,team);};
+}
+
 window.showRecordatorios=async function(){
   var bg=el('div','modal-bg active');
   bg.innerHTML='<div class="modal"><h3>🔔 Recordatorios pendientes</h3><div id="recList" style="max-height:65vh;overflow-y:auto;"><div style="text-align:center;color:var(--text3);padding:20px;">Cargando...</div></div><button class="btn btn-outline btn-block" style="margin-top:10px;" id="recClose">Cerrar</button></div>';
@@ -3126,7 +3284,7 @@ window.askAdminPwd=function(cb){
 
 window.openAdminMenu=function(){
     var bg=el('div','modal-bg active');
-    bg.innerHTML='<div class="modal"><h3>⚙️ Coordinadores</h3><div style="display:flex;flex-direction:column;gap:8px;"><button class="btn btn-primary btn-block" id="apCoach">👤 Entrenadores</button><button class="btn btn-primary btn-block" id="apTeams">🏀 Gestionar equipos</button><button class="btn btn-primary btn-block" id="apNewTeam">+ Crear equipo</button><button class="btn btn-primary btn-block" id="apSchools" style="background:#e67e22;">🏫 Escuelas</button><button class="btn btn-primary btn-block" id="apSched">📅 Horarios</button><button class="btn btn-primary btn-block" id="apReminders" style="background:#c0392b;">🔔 Recordatorios</button><button class="btn btn-primary btn-block" id="apReports">📊 Informes del club</button><button class="btn btn-primary btn-block" style="background:#8e44ad;" id="apRestore">🗄️ Restaurar backup</button><div style="margin-top:8px;border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px;"><button class="btn btn-outline btn-block" id="apChgAdminPwd">🔑 Cambiar clave Coordinadores</button><button class="btn btn-outline btn-block" id="apChgSchoolsPwd">🔑 Cambiar clave Coordinador Escuelas</button><button class="btn btn-outline btn-block" id="apChgDirectivaPwd">🔑 Cambiar clave Directiva</button></div><button class="btn btn-outline btn-block" style="margin-top:8px;" id="apClose">Cerrar</button></div></div>';
+    bg.innerHTML='<div class="modal"><h3>⚙️ Coordinadores</h3><div style="display:flex;flex-direction:column;gap:8px;"><button class="btn btn-primary btn-block" id="apCoach">👤 Entrenadores</button><button class="btn btn-primary btn-block" id="apTeams">🏀 Gestionar equipos</button><button class="btn btn-primary btn-block" id="apNewTeam">+ Crear equipo</button><button class="btn btn-primary btn-block" id="apSchools" style="background:#e67e22;">🏫 Escuelas</button><button class="btn btn-primary btn-block" id="apSched">📅 Horarios</button><button class="btn btn-primary btn-block" id="apReminders" style="background:#c0392b;">🔔 Recordatorios</button><button class="btn btn-primary btn-block" id="apReports">📊 Informes del club</button><button class="btn btn-primary btn-block" style="background:#00695c;" id="apHistorico">📜 Histórico 2025-26</button><button class="btn btn-primary btn-block" style="background:#8e44ad;" id="apRestore">🗄️ Restaurar backup</button><div style="margin-top:8px;border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px;"><button class="btn btn-outline btn-block" id="apChgAdminPwd">🔑 Cambiar clave Coordinadores</button><button class="btn btn-outline btn-block" id="apChgSchoolsPwd">🔑 Cambiar clave Coordinador Escuelas</button><button class="btn btn-outline btn-block" id="apChgDirectivaPwd">🔑 Cambiar clave Directiva</button></div><button class="btn btn-outline btn-block" style="margin-top:8px;" id="apClose">Cerrar</button></div></div>';
     document.body.appendChild(bg);
     bg.onclick=function(e){if(e.target===bg)bg.remove();};
     bg.querySelector('#apClose').onclick=function(){bg.remove();};
@@ -3138,6 +3296,7 @@ window.openAdminMenu=function(){
     bg.querySelector('#apReports').onclick=function(){bg.remove();S.repLvl='club';S.view='teamlist';S.teamListData=DB.teams;render();setTimeout(function(){showClubReport();},100);};
     bg.querySelector('#apRestore').onclick=function(){bg.remove();showRestoreBackup();};
     bg.querySelector('#apReminders').onclick=function(){bg.remove();showRecordatorios();};
+    bg.querySelector('#apHistorico').onclick=function(){bg.remove();showHistorico();};
     bg.querySelector('#apChgAdminPwd').onclick=function(){
       var b2=el('div','modal-bg active');
       b2.innerHTML='<div class="modal" style="padding:24px;"><h3 style="text-align:center;">Nueva clave Coordinadores</h3><div class="form-group" style="margin:12px 0;"><input id="newAdminPwdF" value="'+(DB.adminPwd||'144')+'" style="font-size:16px;text-align:center;padding:12px;"></div><div style="display:flex;gap:8px;"><button class="btn btn-primary btn-block" id="saveAdminPwdBtn">Guardar</button><button class="btn btn-outline" id="cancelAdminPwdBtn">Cancelar</button></div></div>';
@@ -3190,7 +3349,7 @@ async function init(){
         });
         (res.data.jugadores||[]).forEach(j=>{
           if(!teamMap[j.equipoId])return;
-          teamMap[j.equipoId].players.push({id:j.id,name:j.nombre,dorsal:parseInt(j.dorsal)||0,birthYear:j.anioNacimiento||'',phone:j.telefono||'',email:j.email||'',obs:j.obs||'',photo:j.photoUrl||j.photo||_getLocalPhoto(j.id)||''});
+          teamMap[j.equipoId].players.push({id:j.id,name:j.nombre,dorsal:parseInt(j.dorsal)||0,birthYear:j.anioNacimiento||'',phone:j.telefono||'',email:j.email||'',obs:j.obs||'',photo:j.photoUrl||j.photo||_getLocalPhoto(j.id)||'',fatherName:j.nombrePadre||'',fatherPhone:j.telefonoPadre||'',fatherEmail:j.emailPadre||'',motherName:j.nombreMadre||'',motherPhone:j.telefonoMadre||'',motherEmail:j.emailMadre||''});
         });
         (res.data.asistencia||[]).forEach(a=>{
           if(!teamMap[a.equipoId])return;
