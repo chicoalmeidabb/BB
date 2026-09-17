@@ -163,6 +163,70 @@ const CONFIG_URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbwD3Er
 // ══════════════════════════════════════════════════════════
 
 const DB_KEY='cbb_v4_cache';
+const SESSION_KEY='cbb_session';
+function saveSession(sess){try{localStorage.setItem(SESSION_KEY,JSON.stringify(sess));}catch(e){}}
+function loadSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY));}catch(e){return null;}}
+function clearSession(){try{localStorage.removeItem(SESSION_KEY);}catch(e){}}
+function _tryLoginCoach(pwd,preserveView){
+  var myTeams=[];
+  (DB.coaches||[]).forEach(function(c){
+    if(String(c.password)===String(pwd)&&pwd!==''){
+      (c.teams||[]).forEach(function(tid){
+        var t=DB.teams.find(function(x){return x.id===tid;});
+        if(t&&!myTeams.find(function(x){return x.id===t.id;}))myTeams.push(t);
+      });
+    }
+  });
+  DB.teams.forEach(function(t){
+    if(String(t.coachCode)===pwd&&pwd!==''&&!myTeams.find(function(x){return x.id===t.id;})){
+      myTeams.push(t);
+    }
+  });
+  if(!myTeams.length)return false;
+  S.role='coach';S.readOnly=false;S.coachPwd=pwd;S.teamListData=myTeams;
+  if(!preserveView)S.view='teamlist';
+  return true;
+}
+function tryRestoreSession(){
+  var sess=loadSession();
+  if(!sess||!sess.type)return false;
+  var alreadyLoggedIn=!!S.role||!!S.schoolsRole;
+  if(sess.type==='coach'){
+    var ok=_tryLoginCoach(sess.pwd,alreadyLoggedIn);
+    return ok;
+  }
+  if(sess.type==='admin'){
+    if(sess.pwd!==(DB.adminPwd||'144'))return false;
+    S.role='admin';S.readOnly=false;S.teamListData=DB.teams;
+    if(!alreadyLoggedIn)S.view='teamlist';
+    return true;
+  }
+  if(sess.type==='directiva'){
+    if(sess.pwd!==(DB.directivaPwd||'144D'))return false;
+    S.role='admin';S.readOnly=true;S.teamListData=DB.teams;
+    if(!alreadyLoggedIn)S.view='teamlist';
+    return true;
+  }
+  if(sess.type==='schoolsCoord'){
+    if(sess.pwd!==(DB.schoolsCoordPwd||'144E')&&sess.pwd!==(DB.adminPwd||'144'))return false;
+    S.schoolsRole='coord';
+    if(!alreadyLoggedIn)S.view='schoolslist';
+    return true;
+  }
+  if(sess.type==='schoolsMonitor'){
+    var mySchool=(DB.schools||[]).find(function(s){return String(s.password)===String(sess.pwd)&&sess.pwd!=='';});
+    if(!mySchool)return false;
+    S.schoolsRole='monitor';S.mySchoolId=mySchool.id;
+    if(!alreadyLoggedIn)S.view='schoolslist';
+    return true;
+  }
+  return false;
+}
+window.logout=function(){
+  clearSession();
+  S.role=null;S.readOnly=false;S.team=null;S.schoolsRole=null;S.coachPwd=null;S.mySchoolId=null;S.view='login';
+  render();
+};
 function loadDB(){try{return JSON.parse(localStorage.getItem(DB_KEY))||defaultDB();}catch(e){return defaultDB();}}
 function saveDB(db){if(typeof S!=='undefined'&&S.readOnly){toast('🔒 Solo lectura: la directiva no puede modificar datos');return;}localStorage.setItem(DB_KEY,JSON.stringify(db));}
 function defaultDB(){return{teams:[],clubName:'BB Baloncesto Badajoz'};}
@@ -635,25 +699,9 @@ function renderLogin(app){
   // Entrenador: pide clave → muestra sus equipos
   s.querySelector('#btnCoach').onclick=function(){
     showPwdModal('Clave de entrenador',function(pwd){
-      // Find coach or team by password
-      var myTeams=[];
-      // Check coach passwords
-      (DB.coaches||[]).forEach(function(c){
-        if(String(c.password)===String(pwd)&&pwd!==''){
-          (c.teams||[]).forEach(function(tid){
-            var t=DB.teams.find(function(x){return x.id===tid;});
-            if(t)myTeams.push(t);
-          });
-        }
-      });
-      // Also check team coachCode
-      DB.teams.forEach(function(t){
-        if(String(t.coachCode)===pwd&&!myTeams.find(function(x){return x.id===t.id;})){
-          myTeams.push(t);
-        }
-      });
-      if(!myTeams.length){toast('Clave no encontrada');return;}
-      S.role='coach';S.readOnly=false;S.coachPwd=pwd;S.view='teamlist';S.teamListData=myTeams;render();
+      if(!_tryLoginCoach(pwd)){toast('Clave no encontrada');return;}
+      saveSession({type:'coach',pwd:pwd});
+      render();
     });
   };
 
@@ -663,10 +711,10 @@ function renderLogin(app){
     showPwdModal('Clave de Escuelas',function(pwd){
       if(!DB.schools)DB.schools=[];
       if(pwd===(DB.schoolsCoordPwd||'144E')||pwd===(DB.adminPwd||'144')){
-        S.schoolsRole='coord';S.view='schoolslist';render();return;
+        S.schoolsRole='coord';S.view='schoolslist';saveSession({type:'schoolsCoord',pwd:pwd});render();return;
       }
       var mySchool=DB.schools.find(function(s){return String(s.password)===String(pwd)&&pwd!=='';});
-      if(mySchool){S.schoolsRole='monitor';S.mySchoolId=mySchool.id;S.view='schoolslist';render();return;}
+      if(mySchool){S.schoolsRole='monitor';S.mySchoolId=mySchool.id;S.view='schoolslist';saveSession({type:'schoolsMonitor',pwd:pwd});render();return;}
       toast('Clave no encontrada');
     });
   };
@@ -675,7 +723,7 @@ function renderLogin(app){
   s.querySelector('#btnAdmin').onclick=function(){
     showPwdModal('Clave de Coordinadores',function(pwd){
       if(pwd!==(DB.adminPwd||'144')){toast('Clave incorrecta');return;}
-      S.role='admin';S.readOnly=false;S.view='adminhome';render();
+      S.role='admin';S.readOnly=false;S.view='adminhome';saveSession({type:'admin',pwd:pwd});render();
       setTimeout(function(){openAdminMenu();},50);
     });
   };
@@ -684,7 +732,7 @@ function renderLogin(app){
   s.querySelector('#btnDirectiva').onclick=function(){
     showPwdModal('Clave de Directiva',function(pwd){
       if(pwd!==(DB.directivaPwd||'144D')){toast('Clave incorrecta');return;}
-      S.role='admin';S.readOnly=true;S.view='teamlist';S.teamListData=DB.teams;render();
+      S.role='admin';S.readOnly=true;S.view='teamlist';S.teamListData=DB.teams;saveSession({type:'directiva',pwd:pwd});render();
       toast('👁 Acceso de solo consulta — no se puede modificar nada');
     });
   };
@@ -714,7 +762,7 @@ function renderAdminHome(app){
     '<button class="btn btn-primary btn-block" id="ahOpenMenu">⚙️ Abrir menú de Coordinadores</button>'+
     '</div>';
   app.appendChild(content);
-  app.querySelector('#ahBack').onclick=function(){S.view='login';S.role=null;S.readOnly=false;render();};
+  app.querySelector('#ahBack').onclick=function(){logout();};
   app.querySelector('#ahOpenMenu').onclick=function(){openAdminMenu();};
 }
 
@@ -731,7 +779,7 @@ function renderTeamList(app){
   if(S.role==='coach'){
     hdr.innerHTML+='<button class="btn btn-sm" style="color:#fff;border:1px solid rgba(255,255,255,.3);font-size:10px;padding:4px 8px;" id="tlChgPwd">Cambiar clave</button>';
   }
-  hdr.innerHTML+='<button class="btn btn-sm" style="color:var(--text3);font-size:14px;padding:4px 8px;" id="tlBack">✕</button>';
+  hdr.innerHTML+='<button class="btn btn-sm" style="color:var(--text3);font-size:11px;padding:4px 8px;" id="tlBack" title="Cerrar sesión">Salir</button>';
   app.appendChild(hdr);
 
   var content=el('div','content');
@@ -764,7 +812,7 @@ function renderTeamList(app){
   });
 
   var backBtn=app.querySelector('#tlBack');
-  if(backBtn)backBtn.onclick=function(){S.view='login';S.role=null;S.readOnly=false;render();};
+  if(backBtn)backBtn.onclick=function(){logout();};
 
   var adminBtn=app.querySelector('#tlAdmin');
   if(adminBtn)adminBtn.onclick=function(){S.view='adminhome';render();setTimeout(function(){openAdminMenu();},50);};
@@ -2485,7 +2533,7 @@ function renderCoachList(app){
 
   app.querySelector('#clBack').onclick=function(){S.view='adminhome';render();setTimeout(function(){openAdminMenu();},50);};
   app.querySelector('#clNew').onclick=function(){editCoach();};
-  app.querySelector('#clReports').onclick=function(){showTeamPickerForReports();};
+  app.querySelector('#clReports').onclick=function(){showReportsChoice();};
   content.querySelectorAll('[data-editcoach]').forEach(function(btn){btn.onclick=function(){editCoach(btn.dataset.editcoach);};});
   content.querySelectorAll('[data-delcoach]').forEach(function(btn){btn.onclick=function(){deleteCoach(btn.dataset.delcoach);};});
   content.querySelectorAll('[data-photobtnC]').forEach(function(btn){
@@ -2537,7 +2585,7 @@ function renderSchoolsList(app){
     card.onclick=function(){S.selSchool=card.getAttribute('data-scid');S.view='schooldetail';render();};
   });
   var backBtn=app.querySelector('#schBack');
-  if(backBtn)backBtn.onclick=function(){S.view='login';S.schoolsRole=null;render();};
+  if(backBtn)backBtn.onclick=function(){logout();};
   var addBtn2=app.querySelector('#addSchoolBtn');
   if(addBtn2)addBtn2.onclick=function(){showNewSchoolModal();};
 }
@@ -2648,6 +2696,68 @@ window.showKidModal=function(scId,kidId){
     else{sc.kids.push({id:gid(),name:name,gender:gender,phone:phone,birthYear:birthYear,obs:obs});}
     saveDB(DB);bg.remove();render();toast(k?'Actualizado':'Anadido');
   };
+};
+
+window.showReportsChoice=function(){
+  var bg=el('div','modal-bg active');
+  bg.innerHTML='<div class="modal"><h3>📊 Informes</h3>'+
+    '<button class="btn btn-primary btn-block" style="margin-bottom:8px;" id="rcTeams">🏀 Listado de equipos</button>'+
+    '<div style="font-size:10px;color:var(--text3);margin-bottom:14px;">Elige un equipo y ve sus informes de asistencia/partidos (individual, equipo o club).</div>'+
+    '<button class="btn btn-primary btn-block" style="margin-bottom:8px;" id="rcCoaches">👤 Listado de entrenadores</button>'+
+    '<div style="font-size:10px;color:var(--text3);margin-bottom:14px;">Genera un PDF con foto, datos de contacto y equipos de cada entrenador, listo para enviar.</div>'+
+    '<button class="btn btn-outline btn-block" id="rcClose">Cancelar</button></div>';
+  document.body.appendChild(bg);
+  bg.onclick=function(e){if(e.target===bg)bg.remove();};
+  bg.querySelector('#rcClose').onclick=function(){bg.remove();};
+  bg.querySelector('#rcTeams').onclick=function(){bg.remove();showTeamPickerForReports();};
+  bg.querySelector('#rcCoaches').onclick=function(){bg.remove();generateCoachesReport();};
+};
+
+window.generateCoachesReport=function(){
+  var coaches=(DB.coaches||[]).slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+  var roleLabel={'1':'1er entrenador','2':'2do entrenador','coord':'Coordinador'};
+
+  var html='<html><head><meta charset="UTF-8"><style>';
+  html+='body{font-family:Arial,sans-serif;font-size:12px;color:#222;padding:20px;max-width:800px;margin:0 auto;}';
+  html+='h1{font-size:20px;border-bottom:3px solid #1565C0;padding-bottom:8px;margin-bottom:4px;}';
+  html+='.coach{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid #ddd;}';
+  html+='.photo{width:70px;height:70px;border-radius:50%;object-fit:cover;background:#eee;border:1px solid #ddd;flex-shrink:0;}';
+  html+='.photo-ph{width:70px;height:70px;border-radius:50%;background:#e8f1fb;color:#1565C0;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;flex-shrink:0;}';
+  html+='.cname{font-size:15px;font-weight:800;color:#1565C0;}';
+  html+='.cinfo{font-size:11px;color:#555;margin-top:2px;}';
+  html+='.cteams{font-size:11px;margin-top:6px;}';
+  html+='.cteams span{display:inline-block;background:#e8f1fb;color:#1565C0;border-radius:10px;padding:2px 8px;margin:2px 4px 2px 0;}';
+  html+='.footer{margin-top:20px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999;text-align:center;}';
+  html+='@media print{body{padding:0;}}';
+  html+='</style></head><body>';
+  html+='<h1>BB Baloncesto Badajoz — Listado de entrenadores</h1>';
+  html+='<p style="color:#666;font-size:11px;">Generado el '+new Date().toLocaleDateString('es-ES')+' · '+coaches.length+' entrenadores</p>';
+
+  coaches.forEach(function(c){
+    var teamsHtml=(c.teamRoles||[]).map(function(tr){
+      var tt=DB.teams.find(function(x){return x.id===tr.teamId;});
+      return tt?'<span>'+tt.name+' — '+(roleLabel[tr.role]||tr.role)+'</span>':'';
+    }).filter(function(x){return x;}).join('');
+    html+='<div class="coach">';
+    html+=c.photo?'<img class="photo" src="'+c.photo+'">':'<div class="photo-ph">'+c.name.charAt(0).toUpperCase()+'</div>';
+    html+='<div style="flex:1;">';
+    html+='<div class="cname">'+c.name+'</div>';
+    html+='<div class="cinfo">'+(c.phone?'📞 '+c.phone+'  ':'')+(c.email?'✉️ '+c.email:'')+(!c.phone&&!c.email?'Sin datos de contacto':'')+'</div>';
+    html+='<div class="cteams">'+(teamsHtml||'<span style="background:#fdecea;color:#c0392b;">Sin equipos asignados</span>')+'</div>';
+    html+='</div></div>';
+  });
+
+  if(!coaches.length)html+='<p style="color:#999;">No hay entrenadores registrados.</p>';
+
+  html+='<div class="footer">BB Baloncesto Badajoz · Informe generado automáticamente<br><img src="'+SIGNATURE_IMG+'" style="height:26px;opacity:.7;margin-top:4px;"></div>';
+  html+='</body></html>';
+
+  var blob=new Blob([html],{type:'text/html'});
+  var url=URL.createObjectURL(blob);
+  var w=window.open(url,'_blank');
+  if(w){w.onload=function(){setTimeout(function(){w.print();},300);};}
+  else{var a=document.createElement('a');a.href=url;a.download='BB_Badajoz_Entrenadores_'+new Date().toISOString().slice(0,10)+'.html';a.click();}
+  toast('Informe generado');
 };
 
 window.showTeamPickerForReports=function(){
@@ -3067,6 +3177,7 @@ window.showAdminPanel=function(){
 };
 
 async function init(){
+  tryRestoreSession();
   render();
   if(CONFIG_URL_GOOGLE_SHEETS!=='AQUÍ_IRÁ_EL_ENLACE'){
     const st=()=>document.getElementById('syncStatus');
@@ -3115,6 +3226,7 @@ async function init(){
         DB.teams=Object.values(teamMap);
         if(res.data.entrenadores)DB.coaches=_hydrateCoaches(res.data.entrenadores);
         saveDB(DB);
+        if(loadSession())tryRestoreSession();
         const _savedSel=document.getElementById('selTeam')?.value||'';
         render();
         const _restoredSel=document.getElementById('selTeam');
