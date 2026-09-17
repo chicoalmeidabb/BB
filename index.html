@@ -2889,42 +2889,32 @@ function _showHistPlayers(body,data,team){
     row.onclick=function(){_showHistPlayer(body,data,team,row.getAttribute('data-histp'));};
   });
 }
+function _histFmtMin(seg){
+  seg=seg||0;
+  var m=Math.floor(seg/60),s=seg%60;
+  return m+':'+String(s).padStart(2,'0');
+}
 function _showHistPlayer(body,data,team,playerName){
-  var totals={};var byMonth={};var totalDays=0;
-  Object.keys(team.sessions).sort().forEach(function(date){
+  var p=team.players.find(function(x){return x.name===playerName;})||{};
+  var totals={};var totalDays=0;
+  Object.keys(team.sessions).forEach(function(date){
     var code=team.sessions[date][playerName];
     if(code===undefined)return;
     totalDays++;
     totals[code]=(totals[code]||0)+1;
-    var ym=date.slice(0,7);
-    if(!byMonth[ym])byMonth[ym]={};
-    byMonth[ym][code]=(byMonth[ym][code]||0)+1;
   });
   var entrenoCodes=['1','1.0','D','T'];
   var entrenos=entrenoCodes.reduce(function(a,c){return a+(totals[c]||0);},0);
-  var partidos=totals['P']||0;
   var pct=totalDays>0?Math.round(entrenos/totalDays*1000)/10:0;
 
   var html='<button class="btn btn-outline btn-sm" style="margin-bottom:10px;" id="histBackPlayers">← '+team.name+'</button>';
-  html+='<div style="font-weight:700;font-size:14px;color:var(--accent2);margin-bottom:8px;">'+playerName+'</div>';
-  html+='<div class="kpi-row" style="margin-bottom:12px;">';
-  html+='<div class="kpi"><div class="val">'+totalDays+'</div><div class="lbl">Días registrados</div></div>';
-  html+='<div class="kpi"><div class="val">'+entrenos+'</div><div class="lbl">Entrenos con equipo</div></div>';
-  html+='<div class="kpi"><div class="val">'+pct+'%</div><div class="lbl">% Asistencia</div></div>';
-  html+='<div class="kpi"><div class="val">'+partidos+'</div><div class="lbl">Partidos</div></div>';
-  html+='</div>';
-  html+='<div style="font-weight:700;font-size:11px;margin-bottom:4px;">Desglose total</div>';
-  Object.keys(totals).sort().forEach(function(code){
-    if(!code)return;
-    html+='<div class="report-row"><span class="rlbl">'+(HIST_CODE_LABEL[code]||code)+' ('+code+')</span><span class="rval">'+totals[code]+'</span></div>';
-  });
-  html+='<div style="font-weight:700;font-size:11px;margin:12px 0 4px;">Mensual</div>';
-  Object.keys(byMonth).sort().forEach(function(ym){
-    var parts=ym.split('-');
-    var label=HIST_MESES[parseInt(parts[1])-1]+' '+parts[0];
-    var cs=Object.keys(byMonth[ym]).filter(function(x){return x;}).map(function(c){return c+':'+byMonth[ym][c];}).join('  ');
-    html+='<div class="report-row"><span class="rlbl">'+label+'</span><span class="rval" style="font-size:10px;">'+cs+'</span></div>';
-  });
+  html+='<div style="font-weight:700;font-size:14px;color:var(--accent2);margin-bottom:10px;">'+playerName+'</div>';
+  html+='<div class="report-row"><span class="rlbl">Partidos jugados</span><span class="rval" style="font-weight:700;">'+(p.partidos||0)+'</span></div>';
+  html+='<div class="report-row"><span class="rlbl">Minutos jugados</span><span class="rval" style="font-weight:700;">'+_histFmtMin(p.minutosSeg)+'</span></div>';
+  html+='<div class="report-row"><span class="rlbl">Puntos metidos</span><span class="rval" style="font-weight:700;">'+(p.puntos||0)+'</span></div>';
+  html+='<div class="report-row"><span class="rlbl">Entrenos realizados</span><span class="rval" style="font-weight:700;">'+entrenos+'</span></div>';
+  html+='<div class="report-row"><span class="rlbl">Entrenos totales del equipo</span><span class="rval" style="font-weight:700;">'+totalDays+'</span></div>';
+  html+='<div class="report-row" style="border-top:1px solid var(--accent);margin-top:4px;padding-top:8px;"><span class="rlbl" style="font-weight:700;">% Asistencia</span><span class="rval" style="font-weight:700;color:var(--accent2);font-size:16px;">'+pct+'%</span></div>';
   body.innerHTML=html;
   body.querySelector('#histBackPlayers').onclick=function(){_showHistPlayers(body,data,team);};
 }
