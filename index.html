@@ -441,6 +441,7 @@ function isH(d){return HOLIDAYS.has(ds(d));}
 function isW(d){return d.getDay()===0||d.getDay()===6;}
 function getWk(off=0){const n=new Date();const m=new Date(n);m.setDate(n.getDate()-((n.getDay()+6)%7)+off*7);m.setHours(0,0,0,0);return Array.from({length:7},(_,i)=>{const d=new Date(m);d.setDate(m.getDate()+i);return d;});}
 const DIAS=['L','M','X','J','V','S','D'],MES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const DIAS_LARGOS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 
 function _coachesForTeam(teamId){
   var c1=null,c2=null;
@@ -1193,34 +1194,63 @@ function rAttendance(c){
     if(isTD) cls+=' training-day';
     const h=el('div',cls);
     h.innerHTML=`${DIAS[i]}<br>${d.getDate()}`;
-    h.onclick=()=>{
+    h.onclick=async()=>{
       if(S.readOnly){toast('🔒 Solo lectura: la directiva no puede modificar datos');return;}
       if(!t.trainingDays) t.trainingDays={};
       const willBeTraining=!t.trainingDays[dstr];
+      const fechaBonita=DIAS_LARGOS[d.getDay()]+' '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
       if(willBeTraining&&dstr>ds(new Date())){toast('No se puede marcar un día futuro como entrenado');return;}
-      t.trainingDays[dstr]=willBeTraining;
+      if(willBeTraining){
+        if(!confirm('¿Marcar '+fechaBonita+' como día de entreno?\n\nSe pondrá "1" (entrenó) a todas las jugadoras que no tengan ya otra incidencia puesta ese día.')){return;}
+      } else {
+        // Antes de desmarcar, sincroniza primero: puede que otro dispositivo (el del
+        // entrenador) haya guardado datos hace un momento que este dispositivo aún no
+        // haya recibido. Evita borrar algo que en realidad sí está relleno.
+        toast('Comprobando datos actualizados...');
+        await syncFromCloud().catch(function(){});
+        const tActual=T();
+        const hayDatosAhora=tActual.trainingSessions[dstr]&&Object.keys(tActual.trainingSessions[dstr]).length>0;
+        const hayDatosAntes=t.trainingSessions[dstr]&&Object.keys(t.trainingSessions[dstr]).length>0;
+        if(hayDatosAhora&&!hayDatosAntes){
+          toast('⚠ Se han encontrado datos que no se habían sincronizado. Revisa antes de quitar el entreno.');
+          rc();return;
+        }
+        if(hayDatosAhora&&!confirm('¿Quitar el entreno del '+fechaBonita+'?\n\nEsto BORRARÁ las incidencias ya registradas ese día para todas las jugadoras.')){rc();return;}
+      }
+      const tt=T();
+      if(!tt.trainingDays) tt.trainingDays={};
+      tt.trainingDays[dstr]=willBeTraining;
       saveDB(DB);
       // Sync training day to cloud
-      gsPost({action:'guardarAsistencia',fecha:dstr,equipoId:t.id,jugadorId:'__TEAM_DAY__',nombre:'DIA_ENTRENAMIENTO',dorsal:'',incidencia:t.trainingDays[dstr]?'TRAIN_DAY':''});
+      gsPost({action:'guardarAsistencia',fecha:dstr,equipoId:tt.id,jugadorId:'__TEAM_DAY__',nombre:'DIA_ENTRENAMIENTO',dorsal:'',incidencia:tt.trainingDays[dstr]?'TRAIN_DAY':''});
       if(willBeTraining){
         // Marca automáticamente "1" (entrenó) a quien no tenga ya un código puesto ese día,
         // para no tener que ir jugadora por jugadora — solo hay que corregir las excepciones.
-        if(!t.trainingSessions[dstr])t.trainingSessions[dstr]={};
+        if(!tt.trainingSessions[dstr])tt.trainingSessions[dstr]={};
         const nuevos=[];
-        t.players.forEach(function(p){
-          if(!t.trainingSessions[dstr][p.id]){
-            t.trainingSessions[dstr][p.id]='1';
-            nuevos.push({fecha:dstr,equipoId:t.id,jugadorId:p.id,nombre:p.name,dorsal:p.dorsal,incidencia:'1'});
+        tt.players.forEach(function(p){
+          if(!tt.trainingSessions[dstr][p.id]){
+            tt.trainingSessions[dstr][p.id]='1';
+            nuevos.push({fecha:dstr,equipoId:tt.id,jugadorId:p.id,nombre:p.name,dorsal:p.dorsal,incidencia:'1'});
           }
         });
-        if(nuevos.length){saveDB(DB);syncAsistenciaBulk(t.id,nuevos);}
+        if(nuevos.length){saveDB(DB);syncAsistenciaBulk(tt.id,nuevos);}
+      } else {
+        // Borrar todas las incidencias de ese día (tras confirmar arriba, con datos ya frescos)
+        if(tt.trainingSessions[dstr]){
+          Object.keys(tt.trainingSessions[dstr]).forEach(function(pid){
+            gsPost({action:'guardarAsistencia',fecha:dstr,equipoId:tt.id,jugadorId:pid,nombre:'',dorsal:'',incidencia:''});
+          });
+          delete tt.trainingSessions[dstr];
+          saveDB(DB);
+        }
       }
       rc();
     };
     grid.appendChild(h);
   });
   t.players.sort((a,b)=>a.dorsal-b.dorsal).forEach(p=>{
-    const thumbHtml2=p.photo?`<img src="${p.photo}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-right:3px;" data-photobtn2="${p.id}">`:'';
+    const thumbHtml2=p.photo?`<img src="${p.photo}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-right:4px;" data-photobtn2="${p.id}">`:'';
     const nameCell=el('div','cal-name',`<span style="display:flex;align-items:center;">${thumbHtml2}<span style="color:#fff;margin-right:4px;font-size:10px;font-weight:800;">${p.dorsal}</span>${p.name.split(' ').slice(0,2).join(' ')}</span>`);
     nameCell.style.cursor='pointer';
     nameCell.onclick=()=>{S.selPlayer=p.id;S.sub='playerDetail';S.fromAttendance=true;rc();};
@@ -3167,21 +3197,130 @@ window.showTeamManager=function(){
 
 // ═══ SCHEDULE EDITOR ═══
 window.showScheduleEditor=function(){
-  if(!DB.schedules)DB.schedules=[];
   var bg=el('div','modal-bg active');
-  var inner='<div class="modal"><h3>Horarios de pistas</h3>';
-  DB.schedules.forEach(function(pav,pi){
-    inner+='<div class="card" style="margin-bottom:8px;padding:10px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div style="font-weight:700;">'+pav.name+'</div><div style="display:flex;gap:4px;"><button class="btn btn-outline btn-sm" style="font-size:9px;" data-editsch="'+pi+'">Editar</button><button class="btn btn-danger btn-sm" style="font-size:9px;padding:3px 6px;" data-delsch="'+pi+'">X</button></div></div><div style="font-size:10px;color:var(--text3);">'+pav.courts+' pistas - '+(pav.slots?pav.slots.length:0)+' franjas</div></div>';
+  var days=[{k:'L',l:'Lunes'},{k:'M',l:'Martes'},{k:'X',l:'Miércoles'},{k:'J',l:'Jueves'},{k:'V',l:'Viernes'},{k:'S',l:'Sábado'},{k:'D',l:'Domingo'}];
+  var teams=(DB.teams||[]).slice().sort(function(a,b){return teamRank(a.name)-teamRank(b.name)||a.name.localeCompare(b.name);});
+
+  var inner='<div class="modal"><h3>📅 Horarios — todos los equipos</h3>';
+  inner+='<div id="schedAllBody" style="max-height:60vh;overflow-y:auto;">';
+  teams.forEach(function(t){
+    var sched=t.weeklySchedule||[];
+    inner+='<div class="card" style="margin-bottom:8px;padding:10px;"><div style="font-weight:700;font-size:12px;margin-bottom:6px;">'+t.name+'</div>';
+    if(!sched.length){
+      inner+='<div style="font-size:10px;color:var(--text3);">Sin horario configurado</div>';
+    } else {
+      days.forEach(function(d){
+        var s=sched.find(function(x){return x.day===d.k;});
+        if(!s)return;
+        inner+='<div class="report-row" style="padding:3px 0;"><span class="rlbl" style="font-size:11px;">'+d.l+'</span><span class="rval" style="font-size:11px;">'+(s.startTime||'?')+(s.endTime?'-'+s.endTime:'')+(s.pavilion?' · '+s.pavilion:'')+'</span></div>';
+      });
+    }
+    inner+='</div>';
   });
-  inner+='<button class="btn btn-primary btn-block" id="addPavBtn">+ Añadir pabellón</button>';
+
+  var byPav=_buildPavilionGridsFromTeams();
+  var pavNames=Object.keys(byPav).sort();
+  if(pavNames.length){
+    inner+='<div class="section-title" style="margin-top:12px;">Por pabellón</div>';
+    var colors={'MINI':'#3498db','INFANTIL':'#e67e22','CADETE':'#9b59b6','JUNIOR':'#27ae60','NACIONAL':'#e74c3c','BENJAMIN':'#f1c40f','DIPUTACION':'#8d6e63','TERCERAFEB':'#1565C0'};
+    function getColor(name){
+      if(!name)return'transparent';
+      var n=(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+      for(var k in colors){if(n.indexOf(k)>=0)return colors[k];}
+      return'#555';
+    }
+    pavNames.forEach(function(pavName){
+      var timeKeys=Object.keys(byPav[pavName]).sort();
+      inner+='<div class="section-title" style="font-size:11px;">'+pavName+'</div>';
+      inner+='<div class="card" style="padding:6px;overflow-x:auto;"><table style="border-collapse:collapse;width:100%;font-size:8px;"><tr><th style="padding:3px;border:1px solid var(--line);background:var(--bg4);">Hora</th>';
+      days.forEach(function(d){inner+='<th style="padding:3px;border:1px solid var(--line);background:var(--bg4);">'+d.l.slice(0,3)+'</th>';});
+      inner+='</tr>';
+      timeKeys.forEach(function(tk){
+        inner+='<tr><td style="padding:2px 3px;border:1px solid var(--line);font-weight:700;white-space:nowrap;">'+tk+'</td>';
+        days.forEach(function(d){
+          var val=byPav[pavName][tk][d.k]||'';
+          inner+='<td style="padding:2px;border:1px solid var(--line);background:'+getColor(val)+';color:#fff;font-weight:600;text-align:center;font-size:7px;">'+val+'</td>';
+        });
+        inner+='</tr>';
+      });
+      inner+='</table></div>';
+    });
+  }
+  inner+='</div>';
+  inner+='<button class="btn btn-primary btn-block" style="margin-top:10px;" id="schedPdfBtn">📄 Generar PDF para compartir</button>';
   inner+='<button class="btn btn-outline btn-block" style="margin-top:8px;" id="closeSchEd">Cerrar</button></div>';
   bg.innerHTML=inner;
   document.body.appendChild(bg);
   bg.onclick=function(e){if(e.target===bg)bg.remove();};
   bg.querySelector('#closeSchEd').onclick=function(){bg.remove();};
-  bg.querySelector('#addPavBtn').onclick=function(){bg.remove();addPavilion();};
-  bg.querySelectorAll('[data-editsch]').forEach(function(btn){btn.onclick=function(){bg.remove();editScheduleGrid(parseInt(btn.dataset.editsch));};});
-  bg.querySelectorAll('[data-delsch]').forEach(function(btn){btn.onclick=function(){DB.schedules.splice(parseInt(btn.dataset.delsch),1);saveDB(DB);bg.remove();showScheduleEditor();};});
+  bg.querySelector('#schedPdfBtn').onclick=function(){generateAllSchedulesPDF(teams,byPav,days);};
+};
+
+window.generateAllSchedulesPDF=function(teams,byPav,days){
+  var colors={'MINI':'#3498db','INFANTIL':'#e67e22','CADETE':'#9b59b6','JUNIOR':'#27ae60','NACIONAL':'#e74c3c','BENJAMIN':'#f1c40f','DIPUTACION':'#8d6e63','TERCERAFEB':'#1565C0'};
+  function getColor(name){
+    if(!name)return'#fff';
+    var n=(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+    for(var k in colors){if(n.indexOf(k)>=0)return colors[k];}
+    return'#999';
+  }
+  var html='<html><head><meta charset="UTF-8"><style>';
+  html+='body{font-family:Arial,sans-serif;font-size:11px;color:#222;padding:16px;max-width:800px;margin:0 auto;}';
+  html+='h1{font-size:18px;border-bottom:3px solid #1565C0;padding-bottom:6px;}';
+  html+='h2{font-size:13px;color:#1565C0;margin:14px 0 6px;}';
+  html+='table{border-collapse:collapse;width:100%;margin-bottom:10px;font-size:9px;}';
+  html+='th,td{border:1px solid #ccc;padding:4px;text-align:center;}th{background:#1565C0;color:#fff;}';
+  html+='.teamcard{border:1px solid #ddd;border-radius:6px;padding:8px;margin-bottom:8px;}';
+  html+='.footer{margin-top:20px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999;text-align:center;}';
+  html+='@media print{body{padding:0;}}';
+  html+='</style></head><body>';
+  html+='<h1>BB Baloncesto Badajoz — Horarios de todos los equipos</h1>';
+  html+='<p style="color:#666;">Generado el '+new Date().toLocaleDateString('es-ES')+'</p>';
+
+  html+='<h2>Por equipo</h2>';
+  teams.forEach(function(t){
+    var sched=t.weeklySchedule||[];
+    html+='<div class="teamcard"><b>'+t.name+'</b><br>';
+    if(!sched.length){html+='<span style="color:#999;">Sin horario configurado</span>';}
+    else{
+      days.forEach(function(d){
+        var s=sched.find(function(x){return x.day===d.k;});
+        if(!s)return;
+        html+=d.l+': '+(s.startTime||'?')+(s.endTime?'-'+s.endTime:'')+(s.pavilion?' · '+s.pavilion:'')+'<br>';
+      });
+    }
+    html+='</div>';
+  });
+
+  var pavNames=Object.keys(byPav).sort();
+  if(pavNames.length){
+    html+='<h2>Por pabellón</h2>';
+    pavNames.forEach(function(pavName){
+      var timeKeys=Object.keys(byPav[pavName]).sort();
+      html+='<h3 style="font-size:11px;">'+pavName+'</h3><table><tr><th>Hora</th>';
+      days.forEach(function(d){html+='<th>'+d.l.slice(0,3)+'</th>';});
+      html+='</tr>';
+      timeKeys.forEach(function(tk){
+        html+='<tr><td style="font-weight:bold;">'+tk+'</td>';
+        days.forEach(function(d){
+          var val=byPav[pavName][tk][d.k]||'';
+          html+='<td style="background:'+getColor(val)+';color:'+(val?'#fff':'#000')+';">'+val+'</td>';
+        });
+        html+='</tr>';
+      });
+      html+='</table>';
+    });
+  }
+
+  html+='<div class="footer">BB Baloncesto Badajoz · Horarios generados automáticamente<br><img src="'+SIGNATURE_IMG+'" style="height:24px;opacity:.7;margin-top:4px;"></div>';
+  html+='</body></html>';
+
+  var blob=new Blob([html],{type:'text/html'});
+  var url=URL.createObjectURL(blob);
+  var w=window.open(url,'_blank');
+  if(w){w.onload=function(){setTimeout(function(){w.print();},300);};}
+  else{var a=document.createElement('a');a.href=url;a.download='Horarios_BB_Badajoz.html';a.click();}
+  toast('Informe generado — usa "Guardar como PDF" al imprimir para compartirlo');
 };
 
 window.addPavilion=function(){
