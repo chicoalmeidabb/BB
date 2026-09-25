@@ -3639,7 +3639,7 @@ function rHelp(c){
       <div style="font-weight:600;margin-bottom:4px;">🔔 Recordatorios de asistencia:</div>
       <p style="margin-bottom:8px;">Si un equipo lleva 2 días sin registrar un entreno que le tocaba (según su horario), llega un aviso <b>solo al coordinador</b> por email. Desde Recordatorios se decide, equipo por equipo, si avisar al entrenador o descartarlo — nunca se avisa automáticamente al entrenador.</p>
       <div style="font-weight:600;margin-bottom:4px;">📜 Histórico de temporadas:</div>
-      <p>Consulta de solo lectura de temporadas anteriores: equipo → jugadora → partidos, minutos, puntos y % de asistencia de esa temporada.</p>
+      <p>Consulta de temporadas anteriores: equipo → jugadora → partidos, minutos, puntos y % de asistencia. En cada equipo se puede guardar su entrenador de esa temporada y sacar el <b>📄 Informe del equipo</b> con todos los jugadores.</p>
     </div>
 
     <div class="card">
@@ -4405,15 +4405,191 @@ function _showHistTeams(body,data){
     };
   });
 }
-function _showHistPlayers(body,data,team){
+// Entrenadores de cada equipo del histórico (guardados en la hoja HistoricoEntrenadores)
+var _histCoaches=null;
+async function _loadHistCoaches(force){
+  if(_histCoaches&&!force)return _histCoaches;
+  var res=await gsGet({action:'historicoEntrenadores'});
+  var map={};
+  ((res&&res.ok&&res.data&&res.data.historicoEntrenadores)||[]).forEach(function(r){
+    map[String(r.temporada)+'|'+String(r.equipo)]={c1:r.entrenador1||'',c2:r.entrenador2||''};
+  });
+  _histCoaches=map;
+  return map;
+}
+function _histCoachOf(data,team){
+  return (_histCoaches&&_histCoaches[data.season+'|'+team.name])||{c1:'',c2:''};
+}
+function _histEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function _histPlayerStats(team,p){
+  var entrenos=p.entrenosConEquipo||p.entrenosTotales||0;
+  var entrenosClub=team.entrenosClubTotal||entrenos;
+  var pct=p.pctJugador!==undefined?Math.round(p.pctJugador*10)/10:(entrenosClub>0?Math.round(entrenos/entrenosClub*1000)/10:0);
+  return{
+    entrenos:entrenos,
+    noEntrena:p.noEntrena||0,
+    pct:pct,
+    partidos:p.partidos||0,
+    minSeg:(p.minutosConEquipoSeg||0)+(p.minutosOtroEquipoSeg||0),
+    minOtroSeg:p.minutosOtroEquipoSeg||0,
+    pts:(p.puntosConEquipo||0)+(p.puntosOtroEquipo||0),
+    ptsOtro:p.puntosOtroEquipo||0
+  };
+}
+function _editHistCoach(data,team,onDone){
+  var cur=_histCoachOf(data,team);
+  var names=(DB.coaches||[]).map(function(c){return c.name;}).sort(function(a,b){return a.localeCompare(b);});
+  var bg2=el('div','modal-bg active');
+  bg2.innerHTML='<div class="modal"><h3>Entrenadores · '+_histEsc(team.name)+'</h3>'+
+    '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">Temporada '+_histEsc(data.season)+'. Elige de la lista o escribe el nombre si ya no está en el club.</div>'+
+    '<datalist id="hcNames">'+names.map(function(n){return '<option value="'+_histEsc(n)+'">';}).join('')+'</datalist>'+
+    '<label style="font-size:11px;font-weight:600;">1er Entrenador</label><input id="hcC1" list="hcNames" value="'+_histEsc(cur.c1)+'" style="width:100%;margin:4px 0 10px;">'+
+    '<label style="font-size:11px;font-weight:600;">2do Entrenador</label><input id="hcC2" list="hcNames" value="'+_histEsc(cur.c2)+'" style="width:100%;margin:4px 0 10px;">'+
+    '<div style="display:flex;gap:8px;"><button class="btn btn-primary btn-block" id="hcSave">Guardar</button><button class="btn btn-outline" id="hcCancel">Cancelar</button></div></div>';
+  document.body.appendChild(bg2);
+  bg2.onclick=function(e){if(e.target===bg2)bg2.remove();};
+  bg2.querySelector('#hcCancel').onclick=function(){bg2.remove();};
+  bg2.querySelector('#hcSave').onclick=async function(){
+    var btn=bg2.querySelector('#hcSave');btn.disabled=true;btn.textContent='Guardando...';
+    var c1=bg2.querySelector('#hcC1').value.trim(),c2=bg2.querySelector('#hcC2').value.trim();
+    var res=await gsPost({action:'guardarHistoricoEntrenador',temporada:data.season,equipo:team.name,entrenador1:c1,entrenador2:c2});
+    if(res&&res.ok){
+      if(!_histCoaches)_histCoaches={};
+      _histCoaches[data.season+'|'+team.name]={c1:c1,c2:c2};
+      bg2.remove();toast('✓ Entrenador guardado');if(onDone)onDone();
+    } else {
+      btn.disabled=false;btn.textContent='Guardar';
+      toast('⚠ '+((res&&res.error)||'No se pudo guardar. Revisa la conexión'));
+    }
+  };
+}
+function _histNorm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function _histFindCurrentTeam(team){
+  var k=_histNorm(team.name);
+  return (DB.teams||[]).find(function(t){return _histNorm(t.name)===k;})||null;
+}
+function _histContrastHTML(data,team,curTeam){
+  var html='<h2 style="margin-top:24px;border-top:2px solid #1565C0;padding-top:12px;">Contraste con esta temporada</h2>';
+  if(!curTeam){html+='<p style="color:#999;">No se ha elegido equipo de esta temporada para comparar.</p>';return html;}
+  html+='<p style="color:#666;font-size:11px;">'+_histEsc(team.name)+' ('+_histEsc(data.season)+') frente a <b>'+_histEsc(curTeam.name)+'</b> (temporada actual)</p>';
+  // Dónde está cada jugador ahora (equipo propio, no vinculado) y dónde estaba en el histórico
+  var ahoraEn={},antesEn={};
+  (DB.teams||[]).forEach(function(t){_nonLinkedPlayers(t).forEach(function(p){ahoraEn[_histNorm(p.name)]=t.name;});});
+  (data.teams||[]).forEach(function(t){t.players.forEach(function(p){antesEn[_histNorm(p.name)]=t.name;});});
+  var antes=team.players.slice().sort(function(a,b){return(a.dorsal||999)-(b.dorsal||999);});
+  var ahora=_nonLinkedPlayers(curTeam).slice().sort(function(a,b){return(a.dorsal||999)-(b.dorsal||999);});
+  var setAhora={};ahora.forEach(function(p){setAhora[_histNorm(p.name)]=true;});
+  var setAntes={};antes.forEach(function(p){setAntes[_histNorm(p.name)]=true;});
+  var siguen=ahora.filter(function(p){return setAntes[_histNorm(p.name)];});
+  var bajas=antes.filter(function(p){return !setAhora[_histNorm(p.name)];});
+  var altas=ahora.filter(function(p){return !setAntes[_histNorm(p.name)];});
+  var dif=ahora.length-antes.length;
+  html+='<div class="kpi"><div class="v">'+antes.length+'</div><div class="l">Antes</div></div>';
+  html+='<div class="kpi"><div class="v">'+ahora.length+'</div><div class="l">Ahora</div></div>';
+  html+='<div class="kpi"><div class="v" style="color:#2e7d32;">+'+altas.length+'</div><div class="l">Altas</div></div>';
+  html+='<div class="kpi"><div class="v" style="color:#c62828;">−'+bajas.length+'</div><div class="l">Bajas</div></div>';
+  html+='<div class="kpi"><div class="v">'+siguen.length+'</div><div class="l">Siguen</div></div>';
+  html+='<div class="kpi"><div class="v">'+(dif>0?'+':dif<0?'−':'')+Math.abs(dif)+'</div><div class="l">Diferencia</div></div>';
+  function lista(titulo,arr,extra){
+    var t='<h2 style="font-size:13px;">'+titulo+' ('+arr.length+')</h2>';
+    if(!arr.length)return t+'<p style="color:#999;font-size:11px;">Ninguno</p>';
+    t+='<table><tr><th>Dorsal</th><th>Jugador</th><th>Situación</th></tr>';
+    arr.forEach(function(p){t+='<tr><td>'+(p.dorsal!=null&&p.dorsal!==''?Math.round(p.dorsal):'')+'</td><td>'+_histEsc(p.name)+'</td><td>'+extra(p)+'</td></tr>';});
+    return t+'</table>';
+  }
+  html+=lista('Jugadores que ya no están',bajas,function(p){var n=ahoraEn[_histNorm(p.name)];return n?'Ahora en <b>'+_histEsc(n)+'</b>':'No está en el club';});
+  html+=lista('Jugadores nuevos',altas,function(p){var n=antesEn[_histNorm(p.name)];return n?'Venía de <b>'+_histEsc(n)+'</b>':'Nuevo en el club';});
+  html+=lista('Jugadores que siguen',siguen,function(){return 'Sigue en el equipo';});
+  html+='<p class="sub">Los jugadores se emparejan por nombre (sin tildes ni mayúsculas). Si un nombre está escrito distinto en cada temporada, puede salir como baja y alta a la vez.</p>';
+  return html;
+}
+function generateHistTeamReport(data,team,curTeam){
+  var cc=_histCoachOf(data,team);
+  var players=team.players.slice().sort(function(a,b){return(a.dorsal||999)-(b.dorsal||999);});
+  var titulo=team.name.replace(/\s+/g,'_')+'_'+String(data.season).replace(/[^0-9]+/g,'-');
+  var html='<html><head><meta charset="UTF-8"><title>'+_histEsc(titulo)+'</title><style>';
+  html+='body{font-family:Arial,sans-serif;font-size:12px;color:#222;padding:20px;max-width:800px;margin:0 auto;}';
+  html+='h1{font-size:20px;border-bottom:3px solid #1565C0;padding-bottom:8px;margin-bottom:4px;}';
+  html+='h2{font-size:15px;color:#1565C0;margin:16px 0 6px;}';
+  html+='.coaches{font-size:13px;margin:10px 0 6px;padding:8px 10px;background:#e8f1fb;border-left:4px solid #1565C0;border-radius:4px;}';
+  html+='table{width:100%;border-collapse:collapse;margin:8px 0 16px;font-size:11px;}';
+  html+='th{background:#1a1a1a;color:#fff;padding:6px 8px;text-align:left;font-size:10px;}';
+  html+='td{padding:5px 8px;border-bottom:1px solid #ddd;}';
+  html+='tr:nth-child(even){background:#f9f9f9;}';
+  html+='.kpi{display:inline-block;background:#f5f5f5;border-radius:8px;padding:10px 16px;margin:4px;text-align:center;min-width:100px;}';
+  html+='.kpi .v{font-size:24px;font-weight:800;color:#1565C0;}';
+  html+='.kpi .l{font-size:9px;color:#666;margin-top:2px;}';
+  html+='.sub{font-size:9px;color:#888;}';
+  html+='.footer{margin-top:20px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999;text-align:center;}';
+  html+='@media print{body{padding:0;}}';
+  html+='</style></head><body>';
+  html+='<h1>BB Baloncesto Badajoz — '+_histEsc(team.name)+'</h1>';
+  html+='<p style="color:#666;font-size:11px;">Temporada '+_histEsc(data.season)+' · Histórico · Informe generado el '+new Date().toLocaleDateString('es-ES')+'</p>';
+  html+='<div class="coaches">Entrenador/a: <b>'+_histEsc(cc.c1||'—')+'</b> &nbsp;|&nbsp; 2º Entrenador/a: <b>'+_histEsc(cc.c2||'—')+'</b></div>';
+  var stats=players.map(function(p){return _histPlayerStats(team,p);});
+  var avg=stats.length?Math.round(stats.reduce(function(a,s){return a+s.pct;},0)/stats.length):0;
+  html+='<h2>Resumen del equipo</h2>';
+  html+='<div class="kpi"><div class="v">'+players.length+'</div><div class="l">Jugadores</div></div>';
+  html+='<div class="kpi"><div class="v">'+(team.entrenosClubTotal||0)+'</div><div class="l">Entrenos del equipo</div></div>';
+  html+='<div class="kpi"><div class="v">'+avg+'%</div><div class="l">Asistencia media</div></div>';
+  html+='<h2>Estadísticas por jugador</h2>';
+  html+='<table><tr><th>Dorsal</th><th>Jugador</th><th>Entren.</th><th>No entrena</th><th>% As.</th><th>Partidos</th><th>Minutos</th><th>Puntos</th></tr>';
+  players.forEach(function(p,i){
+    var s=stats[i];
+    html+='<tr><td><b>'+(p.dorsal!=null&&p.dorsal!==''?Math.round(p.dorsal):'')+'</b></td><td>'+_histEsc(p.name)+'</td><td>'+s.entrenos+'</td><td>'+s.noEntrena+'</td><td><b>'+s.pct+'%</b></td><td>'+s.partidos+'</td>'+
+      '<td>'+_histFmtMin(s.minSeg)+(s.minOtroSeg?'<div class="sub">'+_histFmtMin(s.minOtroSeg)+' otro eq.</div>':'')+'</td>'+
+      '<td>'+s.pts+(s.ptsOtro?'<div class="sub">'+s.ptsOtro+' otro eq.</div>':'')+'</td></tr>';
+  });
+  html+='</table>';
+  html+=_histContrastHTML(data,team,curTeam);
+  html+='<div class="footer">BB Baloncesto Badajoz · baloncestobadajoz.es · Informe generado automáticamente<br><img src="'+SIGNATURE_IMG+'" style="height:26px;opacity:.7;margin-top:4px;"></div>';
+  html+='</body></html>';
+  var blob=new Blob([html],{type:'text/html'});
+  var url=URL.createObjectURL(blob);
+  var w=window.open(url,'_blank');
+  if(w){w.onload=function(){setTimeout(function(){w.print();},400);};}
+  else{var a=document.createElement('a');a.href=url;a.download=titulo+'.html';a.click();}
+  toast('Informe generado');
+}
+window.generateHistTeamReport=generateHistTeamReport;
+
+function _pickCurrentTeamForHist(team,onPick){
+  var teams=(DB.teams||[]).slice().sort(function(a,b){return teamRank(a.name)-teamRank(b.name)||a.name.localeCompare(b.name);});
+  var bg2=el('div','modal-bg active');
+  bg2.innerHTML='<div class="modal"><h3>¿Con qué equipo de esta temporada comparo?</h3>'+
+    '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">No hay ningún equipo actual llamado «'+_histEsc(team.name)+'». Elige cuál es su equivalente.</div>'+
+    '<div style="max-height:55vh;overflow-y:auto;">'+teams.map(function(t){return '<button class="btn btn-outline btn-block" style="margin-bottom:6px;text-align:left;" data-cur="'+t.id+'">'+_histEsc(t.name)+'</button>';}).join('')+'</div>'+
+    '<button class="btn btn-outline btn-block" style="margin-top:8px;" id="pcNone">Sacar el informe sin contraste</button>'+
+    '<button class="btn btn-outline btn-block" style="margin-top:6px;" id="pcCancel">Cancelar</button></div>';
+  document.body.appendChild(bg2);
+  bg2.onclick=function(e){if(e.target===bg2)bg2.remove();};
+  bg2.querySelector('#pcCancel').onclick=function(){bg2.remove();};
+  bg2.querySelector('#pcNone').onclick=function(){bg2.remove();onPick(null);};
+  bg2.querySelectorAll('[data-cur]').forEach(function(b){
+    b.onclick=function(){var t=teams.find(function(x){return x.id===b.getAttribute('data-cur');});bg2.remove();onPick(t);};
+  });
+}
+async function _showHistPlayers(body,data,team){
+  if(!_histCoaches){body.innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;">Cargando...</div>';await _loadHistCoaches();}
+  var cc=_histCoachOf(data,team);
   var players=team.players.slice().sort(function(a,b){return(a.dorsal||999)-(b.dorsal||999);});
   var html='<button class="btn btn-outline btn-sm" style="margin-bottom:10px;" id="histBackTeams">← Equipos</button>';
-  html+='<div style="font-weight:700;font-size:13px;margin-bottom:8px;">'+team.name+'</div>';
+  html+='<div style="font-weight:700;font-size:13px;margin-bottom:6px;">'+team.name+'</div>';
+  html+='<div class="report-row" style="align-items:center;"><span class="rlbl" style="font-size:12px;">Entrenador/a: <b>'+_histEsc(cc.c1||'—')+'</b>'+(cc.c2?'<br>2º: <b>'+_histEsc(cc.c2)+'</b>':'')+'</span><button class="btn btn-outline btn-sm" id="histEditCoach">✏️ Editar</button></div>';
+  html+='<button class="btn btn-primary btn-block" style="margin:10px 0;" id="histTeamReport">📄 Informe del equipo</button>';
   players.forEach(function(p){
     html+='<div class="report-row" style="cursor:pointer;" data-histp="'+p.name.replace(/"/g,'&quot;')+'"><span class="rlbl">'+(p.dorsal?'#'+p.dorsal+' ':'')+p.name+'</span><span class="rval">→</span></div>';
   });
   body.innerHTML=html;
   body.querySelector('#histBackTeams').onclick=function(){_showHistTeams(body,data);};
+  body.querySelector('#histEditCoach').onclick=function(){_editHistCoach(data,team,function(){_showHistPlayers(body,data,team);});};
+  body.querySelector('#histTeamReport').onclick=function(){
+    var c=_histCoachOf(data,team);
+    if(!c.c1&&!confirm('Este equipo no tiene entrenador guardado para '+data.season+'. ¿Sacar el informe igualmente?'))return;
+    var cur=_histFindCurrentTeam(team);
+    if(cur){generateHistTeamReport(data,team,cur);return;}
+    _pickCurrentTeamForHist(team,function(t){generateHistTeamReport(data,team,t);});
+  };
   body.querySelectorAll('[data-histp]').forEach(function(row){
     row.onclick=function(){_showHistPlayer(body,data,team,row.getAttribute('data-histp'));};
   });
