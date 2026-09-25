@@ -172,7 +172,7 @@ window.addEventListener('appinstalled',function(){
   toast('App instalada correctamente');
 });
 const LOGO_URL='https://www.baloncestobadajoz.es/archivos/imagenes/logo.png';
-const APP_VERSION='5.54';
+const APP_VERSION='5.56';
 const SIGNATURE_IMG='data:image/png;base64,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';
 
 const CONFIG_ADMIN_PASSWORD = '144';
@@ -3639,7 +3639,7 @@ function rHelp(c){
       <div style="font-weight:600;margin-bottom:4px;">🔔 Recordatorios de asistencia:</div>
       <p style="margin-bottom:8px;">Si un equipo lleva 2 días sin registrar un entreno que le tocaba (según su horario), llega un aviso <b>solo al coordinador</b> por email. Desde Recordatorios se decide, equipo por equipo, si avisar al entrenador o descartarlo — nunca se avisa automáticamente al entrenador.</p>
       <div style="font-weight:600;margin-bottom:4px;">📜 Histórico de temporadas:</div>
-      <p>Consulta de temporadas anteriores: equipo → jugadora → partidos, minutos, puntos y % de asistencia. En cada equipo se puede guardar su entrenador de esa temporada y sacar el <b>📄 Informe del equipo</b> con todos los jugadores.</p>
+      <p>Consulta de temporadas anteriores: equipo → jugadora → partidos, minutos, puntos y % de asistencia. Dos pestañas: <b>Por equipo</b> (📄 informe de cada equipo con todos sus jugadores) y <b>Todo el club</b>. Al final de cada equipo sale el contraste con esta temporada: antes, ahora, altas y bajas.</p>
     </div>
 
     <div class="card">
@@ -4380,170 +4380,167 @@ async function _loadHistorico(){
     return _histCache;
   }catch(e){return null;}
 }
-window.showHistorico=async function(){
-  var bg=el('div','modal-bg active');
-  bg.innerHTML='<div class="modal"><h3>📜 Histórico 2025-26</h3><div id="histBody" style="max-height:68vh;overflow-y:auto;"><div style="text-align:center;color:var(--text3);padding:20px;">Cargando...</div></div><button class="btn btn-outline btn-block" style="margin-top:10px;" id="histClose">Cerrar</button></div>';
-  document.body.appendChild(bg);
-  bg.onclick=function(e){if(e.target===bg)bg.remove();};
-  bg.querySelector('#histClose').onclick=function(){bg.remove();};
-  var data=await _loadHistorico();
-  var body=bg.querySelector('#histBody');
-  if(!data){body.innerHTML='<div style="text-align:center;color:var(--red);padding:20px;">No se pudo cargar el histórico.<br>Comprueba que el archivo <code>historico_2025_26.json</code> está subido junto al index.html en GitHub.</div>';return;}
-  _showHistTeams(body,data);
-};
-function _showHistTeams(body,data){
-  var teams=data.teams.slice().sort(function(a,b){return teamRank(a.name)-teamRank(b.name)||a.name.localeCompare(b.name);});
-  var html='<div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Temporada '+data.season+' · '+teams.length+' equipos · solo lectura</div>';
-  teams.forEach(function(t){
-    html+='<div class="report-row" style="cursor:pointer;" data-histteam="'+t.name.replace(/"/g,'&quot;')+'"><span class="rlbl" style="font-weight:600;">'+t.name+'</span><span class="rval">'+t.players.length+' jug. →</span></div>';
-  });
-  body.innerHTML=html;
-  body.querySelectorAll('[data-histteam]').forEach(function(row){
-    row.onclick=function(){
-      var team=teams.find(function(t){return t.name===row.getAttribute('data-histteam');});
-      _showHistPlayers(body,data,team);
-    };
-  });
-}
-// Entrenadores de cada equipo del histórico (guardados en la hoja HistoricoEntrenadores)
+// Entrenadores del histórico: solo se muestran si existen en la hoja HistoricoEntrenadores (no se editan desde la app)
 var _histCoaches=null;
-async function _loadHistCoaches(force){
-  if(_histCoaches&&!force)return _histCoaches;
-  var res=await gsGet({action:'historicoEntrenadores'});
+async function _loadHistCoaches(){
+  if(_histCoaches)return _histCoaches;
   var map={};
-  ((res&&res.ok&&res.data&&res.data.historicoEntrenadores)||[]).forEach(function(r){
-    map[String(r.temporada)+'|'+String(r.equipo)]={c1:r.entrenador1||'',c2:r.entrenador2||''};
-  });
+  try{
+    var res=await gsGet({action:'historicoEntrenadores'});
+    ((res&&res.ok&&res.data&&res.data.historicoEntrenadores)||[]).forEach(function(r){
+      map[String(r.temporada)+'|'+String(r.equipo)]={c1:r.entrenador1||'',c2:r.entrenador2||''};
+    });
+  }catch(e){}
   _histCoaches=map;
   return map;
 }
-function _histCoachOf(data,team){
-  return (_histCoaches&&_histCoaches[data.season+'|'+team.name])||{c1:'',c2:''};
-}
+function _histCoachOf(data,team){return (_histCoaches&&_histCoaches[data.season+'|'+team.name])||{c1:'',c2:''};}
 function _histEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function _histNorm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function _histDorsal(p){return p.dorsal!=null&&p.dorsal!==''?Math.round(p.dorsal):'';}
+function _histSortTeams(teams){return teams.slice().sort(function(a,b){return teamRank(a.name)-teamRank(b.name)||a.name.localeCompare(b.name);});}
+function _histSortPlayers(arr){return arr.slice().sort(function(a,b){return(a.dorsal==null?999:a.dorsal)-(b.dorsal==null?999:b.dorsal);});}
+function _histFmtMin(seg){
+  seg=seg||0;
+  var m=Math.floor(seg/60),s=seg%60;
+  return m+':'+String(s).padStart(2,'0');
+}
 function _histPlayerStats(team,p){
   var entrenos=p.entrenosConEquipo||p.entrenosTotales||0;
   var entrenosClub=team.entrenosClubTotal||entrenos;
   var pct=p.pctJugador!==undefined?Math.round(p.pctJugador*10)/10:(entrenosClub>0?Math.round(entrenos/entrenosClub*1000)/10:0);
   return{
-    entrenos:entrenos,
-    noEntrena:p.noEntrena||0,
-    pct:pct,
-    partidos:p.partidos||0,
-    minSeg:(p.minutosConEquipoSeg||0)+(p.minutosOtroEquipoSeg||0),
-    minOtroSeg:p.minutosOtroEquipoSeg||0,
-    pts:(p.puntosConEquipo||0)+(p.puntosOtroEquipo||0),
-    ptsOtro:p.puntosOtroEquipo||0
+    entrenos:entrenos,entrenosClub:entrenosClub,noEntrena:p.noEntrena||0,pct:pct,partidos:p.partidos||0,
+    minSeg:(p.minutosConEquipoSeg||0)+(p.minutosOtroEquipoSeg||0),minOtroSeg:p.minutosOtroEquipoSeg||0,
+    pts:(p.puntosConEquipo||0)+(p.puntosOtroEquipo||0),ptsOtro:p.puntosOtroEquipo||0
   };
 }
-function _editHistCoach(data,team,onDone){
-  var cur=_histCoachOf(data,team);
-  var names=(DB.coaches||[]).map(function(c){return c.name;}).sort(function(a,b){return a.localeCompare(b);});
-  var bg2=el('div','modal-bg active');
-  bg2.innerHTML='<div class="modal"><h3>Entrenadores · '+_histEsc(team.name)+'</h3>'+
-    '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">Temporada '+_histEsc(data.season)+'. Elige de la lista o escribe el nombre si ya no está en el club.</div>'+
-    '<datalist id="hcNames">'+names.map(function(n){return '<option value="'+_histEsc(n)+'">';}).join('')+'</datalist>'+
-    '<label style="font-size:11px;font-weight:600;">1er Entrenador</label><input id="hcC1" list="hcNames" value="'+_histEsc(cur.c1)+'" style="width:100%;margin:4px 0 10px;">'+
-    '<label style="font-size:11px;font-weight:600;">2do Entrenador</label><input id="hcC2" list="hcNames" value="'+_histEsc(cur.c2)+'" style="width:100%;margin:4px 0 10px;">'+
-    '<div style="display:flex;gap:8px;"><button class="btn btn-primary btn-block" id="hcSave">Guardar</button><button class="btn btn-outline" id="hcCancel">Cancelar</button></div></div>';
-  document.body.appendChild(bg2);
-  bg2.onclick=function(e){if(e.target===bg2)bg2.remove();};
-  bg2.querySelector('#hcCancel').onclick=function(){bg2.remove();};
-  bg2.querySelector('#hcSave').onclick=async function(){
-    var btn=bg2.querySelector('#hcSave');btn.disabled=true;btn.textContent='Guardando...';
-    var c1=bg2.querySelector('#hcC1').value.trim(),c2=bg2.querySelector('#hcC2').value.trim();
-    var res=await gsPost({action:'guardarHistoricoEntrenador',temporada:data.season,equipo:team.name,entrenador1:c1,entrenador2:c2});
-    if(res&&res.ok){
-      if(!_histCoaches)_histCoaches={};
-      _histCoaches[data.season+'|'+team.name]={c1:c1,c2:c2};
-      bg2.remove();toast('✓ Entrenador guardado');if(onDone)onDone();
-    } else {
-      btn.disabled=false;btn.textContent='Guardar';
-      toast('⚠ '+((res&&res.error)||'No se pudo guardar. Revisa la conexión'));
-    }
-  };
+function _histTeamAvg(team){
+  if(!team.players.length)return 0;
+  return Math.round(team.players.reduce(function(a,p){return a+_histPlayerStats(team,p).pct;},0)/team.players.length);
 }
-function _histNorm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');}
-function _histFindCurrentTeam(team){
+// Emparejar nombres entre temporadas: el histórico trae nombre y dos apellidos
+// ("ANTONIO CARRASCO MASA", "DE ASSIS VIERA, JOAO GABRIEL") y la app a veces solo
+// nombre y un apellido ("ANTONIO CARRASCO"). Coinciden si todas las palabras del
+// nombre más corto (mínimo 2) están en el más largo, sin tildes ni mayúsculas.
+var HIST_STOP={de:1,del:1,la:1,las:1,los:1,da:1,do:1,dos:1,y:1,e:1};
+function _histTokens(s){
+  return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().split(/[^a-z0-9]+/).filter(function(w){return w&&!HIST_STOP[w];});
+}
+function _histSame(a,b){
+  var A=_histTokens(a),B=_histTokens(b);
+  var small=A.length<=B.length?A:B,big=A.length<=B.length?B:A;
+  if(small.length<2)return small.length===1&&big.length===1&&small[0]===big[0];
+  return small.every(function(w){return big.indexOf(w)>=0;});
+}
+function _histSameDorsal(a,b){return a.dorsal!=null&&a.dorsal!==''&&b.dorsal!=null&&b.dorsal!==''&&Math.round(a.dorsal)===Math.round(b.dorsal);}
+// Empareja por nombre; si hay varios candidatos con nombre parecido, o el nombre no
+// coincide con nadie, el dorsal (que un jugador mantiene siempre en el club) sirve
+// para confirmar o desempatar. r debe ser {name, dorsal}.
+function _histFind(list,r){
+  var byName=list.filter(function(p){return _histSame(p.name,r.name);});
+  if(byName.length===1)return byName[0];
+  if(byName.length>1){
+    var conDorsal=byName.filter(function(p){return _histSameDorsal(p,r);});
+    return conDorsal.length===1?conDorsal[0]:byName[0];
+  }
+  if(r.dorsal!=null&&r.dorsal!==''){
+    var byDorsal=list.filter(function(p){return _histSameDorsal(p,r);});
+    if(byDorsal.length===1){byDorsal[0]._histPorDorsal=true;return byDorsal[0];}
+  }
+  return null;
+}
+// Equipo de esta temporada equivalente: primero por nombre; si no hay, el que comparta más jugadores (mínimo 3)
+function _histFindCurrentTeam(data,team){
   var k=_histNorm(team.name);
-  return (DB.teams||[]).find(function(t){return _histNorm(t.name)===k;})||null;
+  var byName=(DB.teams||[]).find(function(t){return _histNorm(t.name)===k;});
+  if(byName)return byName;
+  // No usar equipos actuales que ya tienen su pareja por nombre en el histórico
+  var histNames={};(data.teams||[]).forEach(function(t){histNames[_histNorm(t.name)]=true;});
+  var best=null,bestN=0;
+  (DB.teams||[]).forEach(function(t){
+    if(histNames[_histNorm(t.name)])return;
+    var cur=_nonLinkedPlayers(t);
+    var n=team.players.filter(function(p){return _histFind(cur,p);}).length;
+    if(n>bestN){bestN=n;best=t;}
+  });
+  return bestN>=3?best:null;
 }
-function _histContrastHTML(data,team,curTeam){
-  var html='<h2 style="margin-top:24px;border-top:2px solid #1565C0;padding-top:12px;">Contraste con esta temporada</h2>';
-  if(!curTeam){html+='<p style="color:#999;">No se ha elegido equipo de esta temporada para comparar.</p>';return html;}
-  html+='<p style="color:#666;font-size:11px;">'+_histEsc(team.name)+' ('+_histEsc(data.season)+') frente a <b>'+_histEsc(curTeam.name)+'</b> (temporada actual)</p>';
-  // Dónde está cada jugador ahora (equipo propio, no vinculado) y dónde estaba en el histórico
-  var ahoraEn={},antesEn={};
-  (DB.teams||[]).forEach(function(t){_nonLinkedPlayers(t).forEach(function(p){ahoraEn[_histNorm(p.name)]=t.name;});});
-  (data.teams||[]).forEach(function(t){t.players.forEach(function(p){antesEn[_histNorm(p.name)]=t.name;});});
-  var antes=team.players.slice().sort(function(a,b){return(a.dorsal||999)-(b.dorsal||999);});
-  var ahora=_nonLinkedPlayers(curTeam).slice().sort(function(a,b){return(a.dorsal||999)-(b.dorsal||999);});
-  var setAhora={};ahora.forEach(function(p){setAhora[_histNorm(p.name)]=true;});
-  var setAntes={};antes.forEach(function(p){setAntes[_histNorm(p.name)]=true;});
-  var siguen=ahora.filter(function(p){return setAntes[_histNorm(p.name)];});
-  var bajas=antes.filter(function(p){return !setAhora[_histNorm(p.name)];});
-  var altas=ahora.filter(function(p){return !setAntes[_histNorm(p.name)];});
-  var dif=ahora.length-antes.length;
-  html+='<div class="kpi"><div class="v">'+antes.length+'</div><div class="l">Antes</div></div>';
-  html+='<div class="kpi"><div class="v">'+ahora.length+'</div><div class="l">Ahora</div></div>';
-  html+='<div class="kpi"><div class="v" style="color:#2e7d32;">+'+altas.length+'</div><div class="l">Altas</div></div>';
-  html+='<div class="kpi"><div class="v" style="color:#c62828;">−'+bajas.length+'</div><div class="l">Bajas</div></div>';
-  html+='<div class="kpi"><div class="v">'+siguen.length+'</div><div class="l">Siguen</div></div>';
+// Contraste con la temporada actual (solo si hay un equipo actual con el mismo nombre)
+function _histContrast(data,team){
+  var cur=_histFindCurrentTeam(data,team);
+  if(!cur)return null;
+  var antes=_histSortPlayers(team.players),ahora=_histSortPlayers(_nonLinkedPlayers(cur));
+  function ahoraEn(p){
+    var t=(DB.teams||[]).find(function(tt){return _histFind(_nonLinkedPlayers(tt),p);});
+    return t?t.name:'';
+  }
+  function antesEn(p){
+    var t=(data.teams||[]).find(function(tt){return _histFind(tt.players,p);});
+    return t?t.name:'';
+  }
+  return{
+    cur:cur,antes:antes,ahora:ahora,
+    siguen:ahora.filter(function(p){return _histFind(antes,p);}),
+    bajas:antes.filter(function(p){return !_histFind(ahora,p);}),
+    altas:ahora.filter(function(p){return !_histFind(antes,p);}),
+    ahoraEn:ahoraEn,antesEn:antesEn
+  };
+}
+var HIST_REPORT_CSS='body{font-family:Arial,sans-serif;font-size:12px;color:#222;padding:20px;max-width:800px;margin:0 auto;}'+
+  'h1{font-size:20px;border-bottom:3px solid #1565C0;padding-bottom:8px;margin-bottom:4px;}'+
+  'h2{font-size:15px;color:#1565C0;margin:16px 0 6px;}'+
+  'h2.team{color:#fff;background:#1565C0;padding:8px 10px;border-radius:4px;margin-top:24px;page-break-before:always;}'+
+  '.coaches{font-size:12px;margin:6px 0;color:#333;}'+
+  'table{width:100%;border-collapse:collapse;margin:8px 0 16px;font-size:11px;}'+
+  'th{background:#1a1a1a;color:#fff;padding:6px 8px;text-align:left;font-size:10px;}'+
+  'td{padding:5px 8px;border-bottom:1px solid #ddd;vertical-align:top;}'+
+  'tr:nth-child(even){background:#f9f9f9;}'+
+  '.kpi{display:inline-block;background:#f5f5f5;border-radius:8px;padding:10px 16px;margin:4px;text-align:center;min-width:90px;}'+
+  '.kpi .v{font-size:22px;font-weight:800;color:#1565C0;}'+
+  '.kpi .l{font-size:9px;color:#666;margin-top:2px;}'+
+  '.sub{font-size:9px;color:#888;}'+
+  '.footer{margin-top:20px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999;text-align:center;}'+
+  '@media print{body{padding:0;}}';
+function _histCoachLine(data,team){
+  var cc=_histCoachOf(data,team);
+  if(!cc.c1&&!cc.c2)return '';
+  return '<div class="coaches">'+(cc.c1?'Entrenador/a: <b>'+_histEsc(cc.c1)+'</b>':'')+(cc.c1&&cc.c2?' &nbsp;|&nbsp; ':'')+(cc.c2?'2º Entrenador/a: <b>'+_histEsc(cc.c2)+'</b>':'')+'</div>';
+}
+function _histPlayersTable(team){
+  var html='<table><tr><th>Dorsal</th><th>Jugador</th><th>Entren.</th><th>No entrena</th><th>% As.</th><th>Partidos</th><th>Minutos</th><th>Puntos</th></tr>';
+  _histSortPlayers(team.players).forEach(function(p){
+    var s=_histPlayerStats(team,p);
+    html+='<tr><td><b>'+_histDorsal(p)+'</b></td><td>'+_histEsc(p.name)+'</td><td>'+s.entrenos+'</td><td>'+s.noEntrena+'</td><td><b>'+s.pct+'%</b></td><td>'+s.partidos+'</td>'+
+      '<td>'+_histFmtMin(s.minSeg)+(s.minOtroSeg?'<div class="sub">'+_histFmtMin(s.minOtroSeg)+' otro eq.</div>':'')+'</td>'+
+      '<td>'+s.pts+(s.ptsOtro?'<div class="sub">'+s.ptsOtro+' otro eq.</div>':'')+'</td></tr>';
+  });
+  return html+'</table>';
+}
+function _histContrastHTML(data,team){
+  var c=_histContrast(data,team);
+  if(!c)return '';
+  var dif=c.ahora.length-c.antes.length;
+  var html='<h2 style="margin-top:20px;border-top:2px solid #1565C0;padding-top:10px;">Contraste con esta temporada ('+_histEsc(c.cur.name)+')</h2>';
+  html+='<div class="kpi"><div class="v">'+c.antes.length+'</div><div class="l">Antes</div></div>';
+  html+='<div class="kpi"><div class="v">'+c.ahora.length+'</div><div class="l">Ahora</div></div>';
+  html+='<div class="kpi"><div class="v" style="color:#2e7d32;">+'+c.altas.length+'</div><div class="l">Altas</div></div>';
+  html+='<div class="kpi"><div class="v" style="color:#c62828;">−'+c.bajas.length+'</div><div class="l">Bajas</div></div>';
+  html+='<div class="kpi"><div class="v">'+c.siguen.length+'</div><div class="l">Siguen</div></div>';
   html+='<div class="kpi"><div class="v">'+(dif>0?'+':dif<0?'−':'')+Math.abs(dif)+'</div><div class="l">Diferencia</div></div>';
   function lista(titulo,arr,extra){
     var t='<h2 style="font-size:13px;">'+titulo+' ('+arr.length+')</h2>';
     if(!arr.length)return t+'<p style="color:#999;font-size:11px;">Ninguno</p>';
     t+='<table><tr><th>Dorsal</th><th>Jugador</th><th>Situación</th></tr>';
-    arr.forEach(function(p){t+='<tr><td>'+(p.dorsal!=null&&p.dorsal!==''?Math.round(p.dorsal):'')+'</td><td>'+_histEsc(p.name)+'</td><td>'+extra(p)+'</td></tr>';});
+    arr.forEach(function(p){t+='<tr><td>'+_histDorsal(p)+'</td><td>'+_histEsc(p.name)+'</td><td>'+extra(p)+'</td></tr>';});
     return t+'</table>';
   }
-  html+=lista('Jugadores que ya no están',bajas,function(p){var n=ahoraEn[_histNorm(p.name)];return n?'Ahora en <b>'+_histEsc(n)+'</b>':'No está en el club';});
-  html+=lista('Jugadores nuevos',altas,function(p){var n=antesEn[_histNorm(p.name)];return n?'Venía de <b>'+_histEsc(n)+'</b>':'Nuevo en el club';});
-  html+=lista('Jugadores que siguen',siguen,function(){return 'Sigue en el equipo';});
-  html+='<p class="sub">Los jugadores se emparejan por nombre (sin tildes ni mayúsculas). Si un nombre está escrito distinto en cada temporada, puede salir como baja y alta a la vez.</p>';
+  html+=lista('Jugadores que ya no están',c.bajas,function(p){var n=c.ahoraEn(p);return(n?'Ahora en <b>'+_histEsc(n)+'</b>':'No está en el club')+(p._histPorDorsal?' <span class="sub">(confirmado por dorsal)</span>':'');});
+  html+=lista('Jugadores nuevos',c.altas,function(p){var n=c.antesEn(p);return(n?'Venía de <b>'+_histEsc(n)+'</b>':'Nuevo en el club')+(p._histPorDorsal?' <span class="sub">(confirmado por dorsal)</span>':'');});
+  html+=lista('Jugadores que siguen',c.siguen,function(p){return 'Sigue en el equipo'+(p._histPorDorsal?' <span class="sub">(confirmado por dorsal)</span>':'');});
   return html;
 }
-function generateHistTeamReport(data,team,curTeam){
-  var cc=_histCoachOf(data,team);
-  var players=team.players.slice().sort(function(a,b){return(a.dorsal||999)-(b.dorsal||999);});
-  var titulo=team.name.replace(/\s+/g,'_')+'_'+String(data.season).replace(/[^0-9]+/g,'-');
-  var html='<html><head><meta charset="UTF-8"><title>'+_histEsc(titulo)+'</title><style>';
-  html+='body{font-family:Arial,sans-serif;font-size:12px;color:#222;padding:20px;max-width:800px;margin:0 auto;}';
-  html+='h1{font-size:20px;border-bottom:3px solid #1565C0;padding-bottom:8px;margin-bottom:4px;}';
-  html+='h2{font-size:15px;color:#1565C0;margin:16px 0 6px;}';
-  html+='.coaches{font-size:13px;margin:10px 0 6px;padding:8px 10px;background:#e8f1fb;border-left:4px solid #1565C0;border-radius:4px;}';
-  html+='table{width:100%;border-collapse:collapse;margin:8px 0 16px;font-size:11px;}';
-  html+='th{background:#1a1a1a;color:#fff;padding:6px 8px;text-align:left;font-size:10px;}';
-  html+='td{padding:5px 8px;border-bottom:1px solid #ddd;}';
-  html+='tr:nth-child(even){background:#f9f9f9;}';
-  html+='.kpi{display:inline-block;background:#f5f5f5;border-radius:8px;padding:10px 16px;margin:4px;text-align:center;min-width:100px;}';
-  html+='.kpi .v{font-size:24px;font-weight:800;color:#1565C0;}';
-  html+='.kpi .l{font-size:9px;color:#666;margin-top:2px;}';
-  html+='.sub{font-size:9px;color:#888;}';
-  html+='.footer{margin-top:20px;padding-top:8px;border-top:1px solid #ddd;font-size:9px;color:#999;text-align:center;}';
-  html+='@media print{body{padding:0;}}';
-  html+='</style></head><body>';
-  html+='<h1>BB Baloncesto Badajoz — '+_histEsc(team.name)+'</h1>';
-  html+='<p style="color:#666;font-size:11px;">Temporada '+_histEsc(data.season)+' · Histórico · Informe generado el '+new Date().toLocaleDateString('es-ES')+'</p>';
-  html+='<div class="coaches">Entrenador/a: <b>'+_histEsc(cc.c1||'—')+'</b> &nbsp;|&nbsp; 2º Entrenador/a: <b>'+_histEsc(cc.c2||'—')+'</b></div>';
-  var stats=players.map(function(p){return _histPlayerStats(team,p);});
-  var avg=stats.length?Math.round(stats.reduce(function(a,s){return a+s.pct;},0)/stats.length):0;
-  html+='<h2>Resumen del equipo</h2>';
-  html+='<div class="kpi"><div class="v">'+players.length+'</div><div class="l">Jugadores</div></div>';
-  html+='<div class="kpi"><div class="v">'+(team.entrenosClubTotal||0)+'</div><div class="l">Entrenos del equipo</div></div>';
-  html+='<div class="kpi"><div class="v">'+avg+'%</div><div class="l">Asistencia media</div></div>';
-  html+='<h2>Estadísticas por jugador</h2>';
-  html+='<table><tr><th>Dorsal</th><th>Jugador</th><th>Entren.</th><th>No entrena</th><th>% As.</th><th>Partidos</th><th>Minutos</th><th>Puntos</th></tr>';
-  players.forEach(function(p,i){
-    var s=stats[i];
-    html+='<tr><td><b>'+(p.dorsal!=null&&p.dorsal!==''?Math.round(p.dorsal):'')+'</b></td><td>'+_histEsc(p.name)+'</td><td>'+s.entrenos+'</td><td>'+s.noEntrena+'</td><td><b>'+s.pct+'%</b></td><td>'+s.partidos+'</td>'+
-      '<td>'+_histFmtMin(s.minSeg)+(s.minOtroSeg?'<div class="sub">'+_histFmtMin(s.minOtroSeg)+' otro eq.</div>':'')+'</td>'+
-      '<td>'+s.pts+(s.ptsOtro?'<div class="sub">'+s.ptsOtro+' otro eq.</div>':'')+'</td></tr>';
-  });
-  html+='</table>';
-  html+=_histContrastHTML(data,team,curTeam);
-  html+='<div class="footer">BB Baloncesto Badajoz · baloncestobadajoz.es · Informe generado automáticamente<br><img src="'+SIGNATURE_IMG+'" style="height:26px;opacity:.7;margin-top:4px;"></div>';
-  html+='</body></html>';
+function _histOpenReport(html,titulo){
   var blob=new Blob([html],{type:'text/html'});
   var url=URL.createObjectURL(blob);
   var w=window.open(url,'_blank');
@@ -4551,70 +4548,113 @@ function generateHistTeamReport(data,team,curTeam){
   else{var a=document.createElement('a');a.href=url;a.download=titulo+'.html';a.click();}
   toast('Informe generado');
 }
-window.generateHistTeamReport=generateHistTeamReport;
+var HIST_FOOTER=function(){return '<div class="footer">BB Baloncesto Badajoz · baloncestobadajoz.es · Informe generado automáticamente<br><img src="'+SIGNATURE_IMG+'" style="height:26px;opacity:.7;margin-top:4px;"></div>';};
+var HIST_NOTA='<p class="sub">En el contraste, los jugadores se emparejan por nombre y apellidos (sin tildes ni mayúsculas; vale con nombre y un apellido). Si un nombre está escrito distinto en cada temporada, puede salir como baja y alta a la vez.</p>';
 
-function _pickCurrentTeamForHist(team,onPick){
-  var teams=(DB.teams||[]).slice().sort(function(a,b){return teamRank(a.name)-teamRank(b.name)||a.name.localeCompare(b.name);});
-  var bg2=el('div','modal-bg active');
-  bg2.innerHTML='<div class="modal"><h3>¿Con qué equipo de esta temporada comparo?</h3>'+
-    '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">No hay ningún equipo actual llamado «'+_histEsc(team.name)+'». Elige cuál es su equivalente.</div>'+
-    '<div style="max-height:55vh;overflow-y:auto;">'+teams.map(function(t){return '<button class="btn btn-outline btn-block" style="margin-bottom:6px;text-align:left;" data-cur="'+t.id+'">'+_histEsc(t.name)+'</button>';}).join('')+'</div>'+
-    '<button class="btn btn-outline btn-block" style="margin-top:8px;" id="pcNone">Sacar el informe sin contraste</button>'+
-    '<button class="btn btn-outline btn-block" style="margin-top:6px;" id="pcCancel">Cancelar</button></div>';
-  document.body.appendChild(bg2);
-  bg2.onclick=function(e){if(e.target===bg2)bg2.remove();};
-  bg2.querySelector('#pcCancel').onclick=function(){bg2.remove();};
-  bg2.querySelector('#pcNone').onclick=function(){bg2.remove();onPick(null);};
-  bg2.querySelectorAll('[data-cur]').forEach(function(b){
-    b.onclick=function(){var t=teams.find(function(x){return x.id===b.getAttribute('data-cur');});bg2.remove();onPick(t);};
-  });
+function generateHistTeamReport(data,team){
+  var titulo=team.name.replace(/\s+/g,'_')+'_'+String(data.season).replace(/[^0-9]+/g,'-');
+  var html='<html><head><meta charset="UTF-8"><title>'+_histEsc(titulo)+'</title><style>'+HIST_REPORT_CSS+'</style></head><body>';
+  html+='<h1>BB Baloncesto Badajoz — '+_histEsc(team.name)+'</h1>';
+  html+='<p style="color:#666;font-size:11px;">Temporada '+_histEsc(data.season)+' · Histórico · Generado el '+new Date().toLocaleDateString('es-ES')+'</p>';
+  html+=_histCoachLine(data,team);
+  html+='<h2>Resumen del equipo</h2>';
+  html+='<div class="kpi"><div class="v">'+team.players.length+'</div><div class="l">Jugadores</div></div>';
+  html+='<div class="kpi"><div class="v">'+(team.entrenosClubTotal||0)+'</div><div class="l">Entrenos del equipo</div></div>';
+  html+='<div class="kpi"><div class="v">'+_histTeamAvg(team)+'%</div><div class="l">Asistencia media</div></div>';
+  html+='<h2>Estadísticas por jugador</h2>'+_histPlayersTable(team);
+  var ctr=_histContrastHTML(data,team);
+  html+=ctr+(ctr?HIST_NOTA:'')+HIST_FOOTER()+'</body></html>';
+  _histOpenReport(html,titulo);
 }
-async function _showHistPlayers(body,data,team){
-  if(!_histCoaches){body.innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;">Cargando...</div>';await _loadHistCoaches();}
+function generateHistClubReport(data){
+  var teams=_histSortTeams(data.teams);
+  var titulo='TodoElClub_'+String(data.season).replace(/[^0-9]+/g,'-');
+  var html='<html><head><meta charset="UTF-8"><title>'+_histEsc(titulo)+'</title><style>'+HIST_REPORT_CSS+'</style></head><body>';
+  html+='<h1>BB Baloncesto Badajoz — Todo el club</h1>';
+  html+='<p style="color:#666;font-size:11px;">Temporada '+_histEsc(data.season)+' · Histórico · '+teams.length+' equipos · Generado el '+new Date().toLocaleDateString('es-ES')+'</p>';
+  html+='<h2>Resumen del club</h2>';
+  html+='<table><tr><th>Equipo</th><th>Jugadores</th><th>Entrenos</th><th>Asist. media</th><th>Ahora</th><th>Altas</th><th>Bajas</th></tr>';
+  teams.forEach(function(t){
+    var c=_histContrast(data,t);
+    html+='<tr><td><b>'+_histEsc(t.name)+'</b></td><td>'+t.players.length+'</td><td>'+(t.entrenosClubTotal||0)+'</td><td><b>'+_histTeamAvg(t)+'%</b></td>'+
+      (c?'<td>'+c.ahora.length+'</td><td style="color:#2e7d32;">+'+c.altas.length+'</td><td style="color:#c62828;">−'+c.bajas.length+'</td>':'<td colspan="3" class="sub">Sin equipo esta temporada</td>')+'</tr>';
+  });
+  html+='</table>';
+  teams.forEach(function(t){
+    html+='<h2 class="team">'+_histEsc(t.name)+' <span style="font-size:11px;font-weight:400;">— '+(t.entrenosClubTotal||0)+' entrenos · asistencia media '+_histTeamAvg(t)+'%</span></h2>';
+    html+=_histCoachLine(data,t);
+    html+=_histPlayersTable(t);
+    html+=_histContrastHTML(data,t);
+  });
+  html+=HIST_NOTA+HIST_FOOTER()+'</body></html>';
+  _histOpenReport(html,titulo);
+}
+window.generateHistTeamReport=generateHistTeamReport;
+window.generateHistClubReport=generateHistClubReport;
+
+window.showHistorico=async function(){
+  var bg=el('div','modal-bg active');
+  bg.innerHTML='<div class="modal"><h3>📜 Histórico 2025-26</h3><div id="histBody" style="max-height:68vh;overflow-y:auto;"><div style="text-align:center;color:var(--text3);padding:20px;">Cargando...</div></div><button class="btn btn-outline btn-block" style="margin-top:10px;" id="histClose">Cerrar</button></div>';
+  document.body.appendChild(bg);
+  bg.onclick=function(e){if(e.target===bg)bg.remove();};
+  bg.querySelector('#histClose').onclick=function(){bg.remove();};
+  var r=await Promise.all([_loadHistorico(),_loadHistCoaches()]);
+  var data=r[0];
+  var body=bg.querySelector('#histBody');
+  if(!data){body.innerHTML='<div style="text-align:center;color:var(--red);padding:20px;">No se pudo cargar el histórico.<br>Comprueba que el archivo <code>historico_2025_26.json</code> está subido junto al index.html en GitHub.</div>';return;}
+  _showHistTeams(body,data,'team');
+};
+function _showHistTeams(body,data,tab){
+  var teams=_histSortTeams(data.teams);
+  var html='<div style="display:flex;gap:6px;margin-bottom:10px;">'+
+    '<button class="btn '+(tab==='team'?'btn-primary':'btn-outline')+' btn-sm" style="flex:1;" id="histTabTeam">Por equipo</button>'+
+    '<button class="btn '+(tab==='club'?'btn-primary':'btn-outline')+' btn-sm" style="flex:1;" id="histTabClub">Todo el club</button></div>';
+  if(tab==='club'){
+    html+='<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Temporada '+data.season+' · '+teams.length+' equipos. Resumen del club y, por cada equipo, todos sus jugadores y el contraste con esta temporada.</div>';
+    html+='<button class="btn btn-primary btn-block" id="histClubReport">📄 Informe de todo el club</button>';
+  } else {
+    html+='<div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Temporada '+data.season+' · toca 📄 para sacar el informe del equipo, o el nombre para ver sus jugadores.</div>';
+    teams.forEach(function(t,i){
+      html+='<div class="report-row" style="align-items:center;gap:6px;">'+
+        '<span class="rlbl" style="font-weight:600;cursor:pointer;flex:1;" data-histteam="'+i+'">'+_histEsc(t.name)+' <span style="font-weight:400;color:var(--text3);font-size:11px;">· '+t.players.length+' jug.</span></span>'+
+        '<button class="btn btn-outline btn-sm" data-histrep="'+i+'">📄 Informe</button></div>';
+    });
+  }
+  body.innerHTML=html;
+  body.querySelector('#histTabTeam').onclick=function(){_showHistTeams(body,data,'team');};
+  body.querySelector('#histTabClub').onclick=function(){_showHistTeams(body,data,'club');};
+  var cr=body.querySelector('#histClubReport');
+  if(cr)cr.onclick=function(){generateHistClubReport(data);};
+  body.querySelectorAll('[data-histteam]').forEach(function(x){x.onclick=function(){_showHistPlayers(body,data,teams[+x.getAttribute('data-histteam')]);};});
+  body.querySelectorAll('[data-histrep]').forEach(function(x){x.onclick=function(){generateHistTeamReport(data,teams[+x.getAttribute('data-histrep')]);};});
+}
+function _showHistPlayers(body,data,team){
+  var players=_histSortPlayers(team.players);
   var cc=_histCoachOf(data,team);
-  var players=team.players.slice().sort(function(a,b){return(a.dorsal||999)-(b.dorsal||999);});
   var html='<button class="btn btn-outline btn-sm" style="margin-bottom:10px;" id="histBackTeams">← Equipos</button>';
-  html+='<div style="font-weight:700;font-size:13px;margin-bottom:6px;">'+team.name+'</div>';
-  html+='<div class="report-row" style="align-items:center;"><span class="rlbl" style="font-size:12px;">Entrenador/a: <b>'+_histEsc(cc.c1||'—')+'</b>'+(cc.c2?'<br>2º: <b>'+_histEsc(cc.c2)+'</b>':'')+'</span><button class="btn btn-outline btn-sm" id="histEditCoach">✏️ Editar</button></div>';
-  html+='<button class="btn btn-primary btn-block" style="margin:10px 0;" id="histTeamReport">📄 Informe del equipo</button>';
-  players.forEach(function(p){
-    html+='<div class="report-row" style="cursor:pointer;" data-histp="'+p.name.replace(/"/g,'&quot;')+'"><span class="rlbl">'+(p.dorsal?'#'+p.dorsal+' ':'')+p.name+'</span><span class="rval">→</span></div>';
+  html+='<div style="font-weight:700;font-size:13px;margin-bottom:4px;">'+_histEsc(team.name)+'</div>';
+  if(cc.c1||cc.c2)html+='<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">'+(cc.c1?'Entrenador/a: <b>'+_histEsc(cc.c1)+'</b>':'')+(cc.c2?(cc.c1?' · ':'')+'2º: <b>'+_histEsc(cc.c2)+'</b>':'')+'</div>';
+  html+='<button class="btn btn-primary btn-block" style="margin:6px 0 10px;" id="histTeamReport">📄 Informe del equipo</button>';
+  players.forEach(function(p,i){
+    html+='<div class="report-row" style="cursor:pointer;" data-histp="'+i+'"><span class="rlbl">'+(_histDorsal(p)!==''?'#'+_histDorsal(p)+' ':'')+_histEsc(p.name)+'</span><span class="rval">→</span></div>';
   });
   body.innerHTML=html;
-  body.querySelector('#histBackTeams').onclick=function(){_showHistTeams(body,data);};
-  body.querySelector('#histEditCoach').onclick=function(){_editHistCoach(data,team,function(){_showHistPlayers(body,data,team);});};
-  body.querySelector('#histTeamReport').onclick=function(){
-    var c=_histCoachOf(data,team);
-    if(!c.c1&&!confirm('Este equipo no tiene entrenador guardado para '+data.season+'. ¿Sacar el informe igualmente?'))return;
-    var cur=_histFindCurrentTeam(team);
-    if(cur){generateHistTeamReport(data,team,cur);return;}
-    _pickCurrentTeamForHist(team,function(t){generateHistTeamReport(data,team,t);});
-  };
+  body.querySelector('#histBackTeams').onclick=function(){_showHistTeams(body,data,'team');};
+  body.querySelector('#histTeamReport').onclick=function(){generateHistTeamReport(data,team);};
   body.querySelectorAll('[data-histp]').forEach(function(row){
-    row.onclick=function(){_showHistPlayer(body,data,team,row.getAttribute('data-histp'));};
+    row.onclick=function(){_showHistPlayer(body,data,team,players[+row.getAttribute('data-histp')]);};
   });
 }
-function _histFmtMin(seg){
-  seg=seg||0;
-  var m=Math.floor(seg/60),s=seg%60;
-  return m+':'+String(s).padStart(2,'0');
-}
-function _showHistPlayer(body,data,team,playerName){
-  var p=team.players.find(function(x){return x.name===playerName;})||{};
-  var minutosTotalSeg=(p.minutosConEquipoSeg||0)+(p.minutosOtroEquipoSeg||0);
-  var puntosTotal=(p.puntosConEquipo||0)+(p.puntosOtroEquipo||0);
-  var entrenos=p.entrenosConEquipo||p.entrenosTotales||0;
-  var entrenosClub=team.entrenosClubTotal||entrenos;
-  var pct=p.pctJugador!==undefined?Math.round(p.pctJugador*10)/10:(entrenosClub>0?Math.round(entrenos/entrenosClub*1000)/10:0);
-
-  var html='<button class="btn btn-outline btn-sm" style="margin-bottom:10px;" id="histBackPlayers">← '+team.name+'</button>';
-  html+='<div style="font-weight:700;font-size:14px;color:var(--accent2);margin-bottom:10px;">'+playerName+'</div>';
-  html+='<div class="report-row"><span class="rlbl">Partidos jugados</span><span class="rval" style="font-weight:700;">'+(p.partidos||0)+'</span></div>';
-  html+='<div class="report-row"><span class="rlbl">Minutos jugados</span><span class="rval" style="font-weight:700;">'+_histFmtMin(minutosTotalSeg)+'</span></div>';
-  html+='<div class="report-row"><span class="rlbl">Puntos metidos</span><span class="rval" style="font-weight:700;">'+puntosTotal+'</span></div>';
-  html+='<div class="report-row"><span class="rlbl">Entrenos realizados</span><span class="rval" style="font-weight:700;">'+entrenos+'</span></div>';
-  html+='<div class="report-row"><span class="rlbl">Entrenos totales del equipo</span><span class="rval" style="font-weight:700;">'+entrenosClub+'</span></div>';
-  html+='<div class="report-row" style="border-top:1px solid var(--accent);margin-top:4px;padding-top:8px;"><span class="rlbl" style="font-weight:700;">% Asistencia</span><span class="rval" style="font-weight:700;color:var(--accent2);font-size:16px;">'+pct+'%</span></div>';
+function _showHistPlayer(body,data,team,p){
+  var s=_histPlayerStats(team,p);
+  var html='<button class="btn btn-outline btn-sm" style="margin-bottom:10px;" id="histBackPlayers">← '+_histEsc(team.name)+'</button>';
+  html+='<div style="font-weight:700;font-size:14px;color:var(--accent2);margin-bottom:10px;">'+_histEsc(p.name)+'</div>';
+  html+='<div class="report-row"><span class="rlbl">Partidos jugados</span><span class="rval" style="font-weight:700;">'+s.partidos+'</span></div>';
+  html+='<div class="report-row"><span class="rlbl">Minutos jugados</span><span class="rval" style="font-weight:700;">'+_histFmtMin(s.minSeg)+'</span></div>';
+  html+='<div class="report-row"><span class="rlbl">Puntos metidos</span><span class="rval" style="font-weight:700;">'+s.pts+'</span></div>';
+  html+='<div class="report-row"><span class="rlbl">Entrenos realizados</span><span class="rval" style="font-weight:700;">'+s.entrenos+'</span></div>';
+  html+='<div class="report-row"><span class="rlbl">Entrenos totales del equipo</span><span class="rval" style="font-weight:700;">'+s.entrenosClub+'</span></div>';
+  html+='<div class="report-row" style="border-top:1px solid var(--accent);margin-top:4px;padding-top:8px;"><span class="rlbl" style="font-weight:700;">% Asistencia</span><span class="rval" style="font-weight:700;color:var(--accent2);font-size:16px;">'+s.pct+'%</span></div>';
   body.innerHTML=html;
   body.querySelector('#histBackPlayers').onclick=function(){_showHistPlayers(body,data,team);};
 }
