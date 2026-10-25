@@ -53,6 +53,7 @@
   .app { display: flex; flex-direction: column; height: 100%; gap: 8px; }
   header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-top: 10px; flex-wrap: wrap; }
   header h1 { margin: 0; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+  .ver { margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: .62rem; letter-spacing: .04em; color: var(--muted); vertical-align: 1px; text-transform: none; font-weight: 700; }
   header p { margin: 0; font-size: 0.75rem; color: var(--muted); }
   .stage { position: relative; flex: 1; min-height: 0; min-width: 0; }
   canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; outline: none; }
@@ -100,6 +101,8 @@
   .toast small { display: block; font-size: .38em; letter-spacing: .08em; color: var(--fg); text-transform: uppercase; text-align: center; text-shadow: none; }
   .player { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
   .seg { display: inline-flex; gap: 6px; }
+  .seg[hidden] { display: none; }
+  #acB0, #acT4, #acT5 { font-weight: 700; }
   .seg button { padding: 8px 13px; font-size: .8rem; }
   .player input {
     font: 600 16px var(--font-ui); color: var(--fg); background: var(--panel);
@@ -120,7 +123,59 @@
   .sheet ol { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 8px; font-size: .88rem; line-height: 1.4; }
   .sheet .note { margin: 0; font-size: .78rem; color: var(--muted); line-height: 1.4; }
   .sheet button { align-self: flex-start; }
+  .br { display: none; }
+  @media (pointer: coarse), (max-width: 640px) {
+    .br { display: block; flex-basis: 100%; height: 0; }
+    button { font-size: .75rem; padding: 7px 8px; }
+    .controls button { font-size: .73rem; padding: 7px 7px; }
+    .controls { gap: 6px 4px; }
+    .seg button { font-size: .8rem; padding: 7px 11px; }
+    .seg { gap: 4px; }
+    .player, .controls { gap: 6px 5px; }
+    .controls { padding-bottom: 16px; }
+    .app { gap: 6px; }
+    .player input { font-size: 16px; padding: 5px 12px; }
+    #iNum { width: 80px; }
+    #iName { flex: 1 1 120px; max-width: 150px; }
+    .hud span { font-size: .84rem; padding: 5px 12px; }
+    header h1 { font-size: .85rem; }
+  }
+  @media (max-width: 640px) { header p { display: none; } }
+  .hb { font-size: .78rem; padding: 6px 13px; }
+  .acad { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
+  .acad-sheet { pointer-events: auto; position: absolute; left: 0; right: 0; bottom: 0; max-width: 560px; margin: 0 auto; max-height: 40vh; overflow: hidden;
+    background: var(--bg); color: var(--fg); border: 1.5px solid var(--line); border-bottom: 0; border-radius: 18px 18px 0 0; 
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 7px; }
+  .acflash { position: absolute; left: 50%; top: 66px; transform: translateX(-50%); background: #f59e0b; color: #1b1200; font-weight: 800; font-size: .74rem; padding: 5px 12px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.2); text-align: center; max-width: 88vw; pointer-events: none; animation: acpop .35s ease-out; }
+  @keyframes acpop { from { transform: translateX(-50%) scale(.7); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+  .acad-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .acad-top h2 { margin: 0; font-size: 1rem; font-weight: 800; }
+  .acad-on .hint, .acad-on .controls, .acad-on .player, .acad-on .hud, .acad-on .toast { visibility: hidden; }
+  .acchips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; justify-content: center; }
+  .acchips span { padding: 4px 10px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: .8rem; font-weight: 700; }
+  .acchips span.z { background: #f59e0b; color: #1b1200; border-color: #f59e0b; }
+  .acchips span.bad { background: #d9534f; color: #fff; border-color: #d9534f; }
+  .acs { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; font-size: .88rem; line-height: 1.38; }
+  .acn { margin: 0; font-size: .82rem; color: var(--muted); line-height: 1.4; text-align: center; }
+  .acq { font-weight: 800; font-size: 1.02rem; line-height: 1.35; text-align: center; }
+  .acopts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .acopts.v { flex-direction: column; align-items: stretch; }
+  .acopts.v button { text-align: left; border-radius: 14px; padding: 12px 14px; font-size: .92rem; }
+  .acfb { padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--panel); font-size: .92rem; line-height: 1.45; margin-bottom: 8px; }
+  .acfb.ok { border-color: #2f9e5b; } .acfb.no { border-color: #d9534f; }
   @media (prefers-reduced-motion: reduce) { .toast.show { animation: none; opacity: 1; } }
+.acad-sheet > *, #acBody > * { flex-shrink: 0; }
+  .acad-sheet .seg button, .acad-sheet .acopts button { padding: 5px 11px; font-size: .76rem; }
+  .acad-sheet .seg, .acad-sheet .acopts { gap: 5px; flex-wrap: wrap; }
+  .acad-sheet .acq { font-size: .95rem; }
+  .acad-top .tb { display: flex; gap: 6px; }
+  .acad-top h2 { font-size: .92rem; }
+  .acad-sheet.min #acBody, .acad-sheet.min #acSub { display: none !important; }
+  @media (orientation: landscape) and (min-width: 700px) {
+    .acad-sheet { left: auto; right: 0; top: 0; bottom: 0; max-width: 340px; max-height: none; margin: 0; border: 1.5px solid var(--line); border-right: 0; border-radius: 18px 0 0 18px; padding-top: 14px; }
+    .acad-sheet.min { bottom: auto; }
+  }
+  .acad-sheet > #acBody { flex: 0 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 </style>
 
 <div class="credit" aria-hidden="true">ChicoAlmeida</div>
@@ -134,13 +189,14 @@
 </div>
 <div class="app">
   <header>
-    <h1>Baloncesto Badajoz</h1>
+    <h1>Baloncesto Badajoz <span class="ver" id="ver"></span></h1>
     <p id="subtitle">Arrastra para girar · pellizca o usa la rueda para acercar</p>
+    <button id="bAcad" class="hb" type="button">Academia</button>
   </header>
   <div class="stage" id="stage">
     <canvas id="c" tabindex="0" aria-label="Logo 3D de Baloncesto Badajoz. Arrástralo para girarlo."></canvas>
     <div class="hud" id="hud" hidden>
-      <span id="hScore">Canastas 0 / 0</span>
+      <span id="hScore">Puntos 0 · 0/0</span>
       <span class="hint" id="hHint">Arrastra hacia abajo y suelta para lanzar</span>
     </div>
     <div class="toast" id="toast" aria-live="polite"><span id="tMain">¡Canasta!</span><small id="tWho"></small></div>
@@ -161,11 +217,14 @@
       <button id="bKitA" type="button" aria-pressed="true">Azul</button>
       <button id="bKitN" type="button" aria-pressed="false">Negra</button>
     </div>
+    <i class="br"></i>
     <input id="iNum" type="text" inputmode="numeric" maxlength="2" placeholder="Dorsal" autocomplete="off" aria-label="Tu dorsal">
     <input id="iName" type="text" maxlength="14" placeholder="Tu nombre" autocomplete="off" aria-label="Tu nombre">
+    <button id="bDef" type="button" aria-pressed="false" title="Uno contra uno: con defensor">1x1</button>
   </div>
   <div class="controls">
     <button id="bSpin" type="button" aria-pressed="false">Giro continuo</button>
+    <button id="bShoot" type="button" aria-pressed="true" hidden>Tirar</button>
     <button id="bMove" type="button" aria-pressed="false" hidden>Mover jugador</button>
     <button id="bField" type="button" aria-pressed="false" hidden>Mover campo</button>
     <button id="bMode" type="button" class="primary">Convertir en canasta</button>
@@ -186,9 +245,10 @@
 
   var U = 0.01, CX = 299, CY = 252;            // píxeles de la imagen original -> unidades 3D
   var CYAN = 0x1eabd1, NAVY = 0x153448, JERSEY = 0x62b6c4;
-  var H = 5.0, RIM = 0.8, TUBE = 0.05, RB = 0.32, ZB = -0.95, G = 18, NET_H = 1.05, HOLD_Y = 3.0, JUMP = 0.3;
+  var APP_V = 'v3.7',  CAMH = 2.9, R3 = 6.75, H = 5.0, RIM = 0.8, TUBE = 0.05, RB = 0.32, ZB = -0.95, G = 18, NET_H = 1.05, HOLD_Y = 3.0, JUMP = 1.0;
 
   var stage = document.getElementById('stage');
+  document.getElementById('ver').textContent = APP_V;
   var canvas = document.getElementById('c');
   var loading = document.getElementById('loading');
   var hud = document.getElementById('hud');
@@ -242,7 +302,7 @@
   }
 
   var emblem, pill, word, ballMesh, shadow;
-  var player, body, legs, pony, jerseyMat, shortsMat, bandMat, trimMat, pShadow, armL, armR, handL, handR, jerseyCv, jerseyTex, bodyOff = 0, liveNow = false;
+  var legG = [], pMats, pIdx, mkArmG, mkHandG, handGeo, dP, dBody, dLegs, dArmL, dArmR, dHandL, dHandR, dShadow, player, body, legs, pony, jerseyMat, shortsMat, bandMat, trimMat, pShadow, armL, armR, handL, handR, jerseyCv, jerseyTex, bodyOff = 0, liveNow = false;
   var aimDots, boardG, hoopG, poleG, netLines, floorMat, lineMat, lineMeshes = [];
   var NA = 16, NL = 6, netPos, netVerts = [];
   var circleOff = new THREE.Vector3(), sBall = 1;
@@ -327,14 +387,19 @@
     jerseyMat = jc; shortsMat = sm; bandMat = bandM; trimMat = trimM;
     function part(geo, m, x, y, z) { var o = new THREE.Mesh(geo, m); o.position.set(x, y, z); return o; }
     /* piernas */
+    legG = []; var sleeveM = new THREE.MeshStandardMaterial({ color: 0x1b2229, roughness: 0.75 });
     [-0.145, 0.145].forEach(function (x) {
-      legs.add(part(new THREE.CylinderGeometry(0.135, 0.09, 0.3, 18), skin, x, 0.83, 0));                // muslo bajo
-      legs.add(part(new THREE.SphereGeometry(0.09, 14, 10), skin, x, 0.7, -0.005));                       // rodilla
-      var calf = part(new THREE.SphereGeometry(1, 14, 12), skin, x, 0.52, 0.025); calf.scale.set(0.09, 0.18, 0.1); legs.add(calf);
-      legs.add(part(new THREE.CylinderGeometry(0.085, 0.056, 0.5, 14), skin, x, 0.46, 0));                // gemelo/espinilla
-      legs.add(part(new THREE.CylinderGeometry(0.07, 0.062, 0.26, 14), bandM, x, 0.28, 0));              // calcetín
-      var shoe = part(new THREE.SphereGeometry(1, 18, 12), cy, x, 0.08, -0.05); shoe.scale.set(0.095, 0.075, 0.2); player.add(shoe);
-      var sole = part(new THREE.SphereGeometry(1, 18, 8), bandM, x, 0.032, -0.05); sole.scale.set(0.1, 0.035, 0.208); player.add(sole);
+      var lg = new THREE.Group(); lg.position.set(x, 0.98, 0); legs.add(lg); legG.push(lg);
+      var Y = 0.98;
+      lg.add(part(new THREE.CylinderGeometry(0.135, 0.09, 0.3, 18), skin, 0, 0.83 - Y, 0));                // muslo bajo
+      lg.add(part(new THREE.SphereGeometry(0.09, 14, 10), skin, 0, 0.7 - Y, -0.005));                       // rodilla
+      var kg = new THREE.Group(); kg.position.set(0, 0.7 - Y, 0); lg.add(kg); lg.userData.knee = kg;   // la espinilla gira en la rodilla
+      var calf = part(new THREE.SphereGeometry(1, 14, 12), skin, 0, 0.52 - 0.7, 0.025); calf.scale.set(0.09, 0.18, 0.1); kg.add(calf);
+      kg.add(part(new THREE.CylinderGeometry(0.085, 0.056, 0.5, 14), skin, 0, 0.46 - 0.7, 0));                // gemelo/espinilla
+      kg.add(part(new THREE.CylinderGeometry(0.07, 0.062, 0.26, 14), bandM, 0, 0.28 - 0.7, 0));              // calcetín
+      kg.add(part(new THREE.CylinderGeometry(0.094, 0.07, 0.36, 16), sleeveM, 0, 0.5 - 0.7, 0));                    // media de compresión (como en la foto)
+      var shoe = part(new THREE.SphereGeometry(1, 18, 12), cy, 0, 0.08 - 0.7, -0.05); shoe.scale.set(0.095, 0.075, 0.2); kg.add(shoe);
+      var sole = part(new THREE.SphereGeometry(1, 18, 8), bandM, 0, 0.032 - 0.7, -0.05); sole.scale.set(0.1, 0.035, 0.208); kg.add(sole);
     });
     /* pantalón */
     var hips = shaped([[1.02, 0.30, 0.185], [1.25, 0.305, 0.185], [1.45, 0.285, 0.172]], sm, 6); body.add(hips);
@@ -346,11 +411,11 @@
       });
     });
     /* tronco: capa de piel (hombros) + camiseta sin mangas */
-    var PJ = [[1.30, 0.305, 0.185], [1.55, 0.26, 0.162], [1.85, 0.33, 0.2], [2.08, 0.34, 0.205], [2.24, 0.255, 0.17], [2.34, 0.13, 0.1]];
-    var PS = [[1.30, 0.29, 0.175], [1.55, 0.245, 0.152], [1.85, 0.315, 0.19], [2.08, 0.325, 0.195], [2.24, 0.30, 0.17], [2.36, 0.14, 0.1]];
+    var PJ = [[1.30, 0.28, 0.175], [1.55, 0.26, 0.162], [1.85, 0.33, 0.2], [2.08, 0.34, 0.205], [2.24, 0.255, 0.17], [2.34, 0.13, 0.1]];
+    var PS = [[1.30, 0.268, 0.165], [1.55, 0.245, 0.152], [1.85, 0.315, 0.19], [2.08, 0.325, 0.195], [2.24, 0.30, 0.17], [2.36, 0.14, 0.1]];
     body.add(shaped(PS, skin, 18));
     var torso = shaped(PJ, jc, 18); body.add(torso);
-    var hem = shaped([[1.29, 0.309, 0.189], [1.33, 0.309, 0.189]], trimM, 1); body.add(hem);
+    var hem = shaped([[1.29, 0.284, 0.179], [1.33, 0.284, 0.179]], trimM, 1); body.add(hem);
     var collar = new THREE.Mesh(new THREE.TorusGeometry(0.125, 0.016, 8, 28), trimM);
     collar.rotation.x = Math.PI / 2; collar.scale.y = 0.8; collar.position.set(0, 2.335, 0); body.add(collar);
     [-1, 1].forEach(function (sd) {
@@ -389,7 +454,8 @@
     pony.visible = false; body.add(pony);
     applyKit();
     if (document.fonts && document.fonts.load) document.fonts.load('800 100px Montserrat', 'ABC123').then(drawJersey, function () {});
-    var hold = new THREE.Group(); hold.position.y = 0.14; hold.add(body); player.add(legs, hold); legs.scale.y = 1.14; player.visible = false; court.add(player);
+    var hold = new THREE.Group(); hold.position.y = 0.14; hold.add(body); player.add(legs, hold); legs.scale.y = 1.14;
+    pMats = { jc: jc, sm: sm, trim: trimM, shoe: cy, hair: hairM, band: bandM, jm: jm, skin: skin }; pIdx = { legs: player.children.indexOf(legs), hold: player.children.indexOf(hold) }; player.visible = false; court.add(player);
     /* brazos de dos tramos con codo */
     var uG = new THREE.CylinderGeometry(0.07, 0.058, 1, 14); uG.translate(0, 0.5, 0);
     var fG = new THREE.CylinderGeometry(0.058, 0.042, 1, 14); fG.translate(0, 0.5, 0);
@@ -399,10 +465,39 @@
       g.userData.e = new THREE.Mesh(new THREE.SphereGeometry(0.058, 12, 10), skin);
       g.add(g.userData.u, g.userData.f, g.userData.e); return g;
     }
-    armL = mkArm(); armR = mkArm();
+    mkArmG = mkArm; armL = mkArm(); armR = mkArm();
     var hg = new THREE.SphereGeometry(1, 16, 12);
-    handL = new THREE.Mesh(hg, skin); handR = new THREE.Mesh(hg, skin);
-    handL.scale.set(0.075, 0.095, 0.05); handR.scale.set(0.075, 0.095, 0.05);
+    /* mano con dedos: el eje y va por el antebrazo, +z es la palma (mira al balón) */
+    var fgS = new THREE.SphereGeometry(1, 8, 6), fgC = new THREE.CylinderGeometry(1, 1, 1, 8); fgC.translate(0, 0.5, 0);
+    mkHandG = function (mir) {
+      var g = new THREE.Group(), pal = new THREE.Mesh(hg, skin);
+      pal.scale.set(0.07, 0.058, 0.026); pal.position.set(0, 0.06, -0.004); g.add(pal);
+      function finger(x, len, rad, spread, curl) {
+        var f = new THREE.Group(); f.position.set(x, 0.1, 0); f.rotation.z = spread; var prev = f;
+        var segs = [len * 0.42, len * 0.34, len * 0.24];
+        for (var s = 0; s < 3; s++) {
+          var j = new THREE.Group(); j.position.y = s === 0 ? 0 : segs[s - 1]; j.rotation.x = curl * (s === 0 ? 0.55 : s === 1 ? 1.0 : 0.8);
+          var c = new THREE.Mesh(fgC, skin); c.scale.set(rad * (1 - s * 0.12), segs[s], rad * (1 - s * 0.12));
+          var b = new THREE.Mesh(fgS, skin); b.scale.setScalar(rad * (1 - s * 0.12) * 1.05);
+          j.add(c, b); prev.add(j); prev = j;
+        }
+        var tip = new THREE.Mesh(fgS, skin); tip.scale.setScalar(rad * 0.74); tip.position.y = segs[2]; prev.add(tip);
+        g.add(f); return f;
+      }
+      finger(-0.043 * mir, 0.105, 0.0135, 0.16 * mir, 0.62);   // meñique
+      finger(-0.015 * mir, 0.125, 0.0145, 0.05 * mir, 0.55);   // anular
+      finger(0.015 * mir, 0.135, 0.015, -0.05 * mir, 0.5);     // corazón
+      finger(0.043 * mir, 0.12, 0.0145, -0.17 * mir, 0.55);    // índice
+      var th = new THREE.Group(); th.position.set(0.062 * mir, 0.035, 0.004); th.rotation.z = -0.95 * mir; th.rotation.x = 0.35;
+      var t1 = new THREE.Mesh(fgC, skin); t1.scale.set(0.0175, 0.05, 0.0175);
+      var t2g = new THREE.Group(); t2g.position.y = 0.05; t2g.rotation.x = 0.5;
+      var t2 = new THREE.Mesh(fgC, skin); t2.scale.set(0.015, 0.04, 0.015);
+      var tt = new THREE.Mesh(fgS, skin); tt.scale.setScalar(0.0145); tt.position.y = 0.04;
+      var tj = new THREE.Mesh(fgS, skin); tj.scale.setScalar(0.0185);
+      t2g.add(t2, tt, tj); th.add(t1, t2g); g.add(th); g.scale.setScalar(1.35);
+      return g;
+    };
+    handL = mkHandG(-1); handR = mkHandG(1);
     court.add(armL, armR, handL, handR);
     armL.visible = armR.visible = handL.visible = handR.visible = false;
     pShadow = new THREE.Mesh(new THREE.CircleGeometry(1, 24), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.25, depthWrite: false }));
@@ -410,40 +505,505 @@
   }
   var hV = new THREE.Vector3(), fV = new THREE.Vector3(), rV = new THREE.Vector3(), tgV = new THREE.Vector3(), shV = new THREE.Vector3(), axV = new THREE.Vector3(), upV = new THREE.Vector3(0, 1, 0);
   var elV = new THREE.Vector3(), poV = new THREE.Vector3(), dirV = new THREE.Vector3(), hcV = new THREE.Vector3();
+  var pzV = new THREE.Vector3(), pxV = new THREE.Vector3(), mM = new THREE.Matrix4(), aimD = new THREE.Vector3();
   var handCur = [new THREE.Vector3(), new THREE.Vector3()], handInit = false;
-  function updateArms(dt, off) {
-    var th = player.rotation.y, sn = Math.sin(th), cs = Math.cos(th), hp = ball.hp, st = ball.state, rel = ball.rel;
-    var arms = [armL, armR], hands = [handL, handR], k = 1 - Math.exp(-dt * 25);
-    for (var i = 0; i < 2; i++) {
-      var sd = i === 0 ? -1 : 1;
-      hV.set(hp.x + cs * 0.27 * sd + sn * 0.05, hp.y + off - 0.02, hp.z - sn * 0.27 * sd + cs * 0.05);
-      fV.set(hp.x + cs * 0.2 * sd - sn * 0.3, hp.y + JUMP + 0.55, hp.z - sn * 0.2 * sd - cs * 0.3);
-      rV.set(player.position.x + cs * 0.5 * sd - sn * 0.05, player.position.y + 1.45, player.position.z - sn * 0.5 * sd - cs * 0.05);
-      if (st === 'flying') {
-        if (rel < 0.5) tgV.copy(hV).lerp(fV, Math.min(1, rel / 0.1));
-        else tgV.copy(fV).lerp(rV, Math.min(1, (rel - 0.5) / 0.5));
-      } else tgV.copy(hV);
-      if (!handInit) handCur[i].copy(tgV); else handCur[i].lerp(tgV, k);
-      shV.set(sd * 0.4, 2.2, 0); body.localToWorld(shV);
+  function ik(bodyRef, arm, hand, hc0, sd, sn, cs, aim, flop, flare) {
+      if (flare === undefined) flare = 1;
+      shV.set(sd * 0.4, 2.2, 0); bodyRef.localToWorld(shV);
       /* IK de dos huesos: el codo cae hacia abajo y afuera */
-      axV.copy(handCur[i]).sub(shV);
+      axV.copy(hc0).sub(shV);
       var d = axV.length(), dd = Math.min(LU + LF - 0.002, Math.max(Math.abs(LU - LF) + 0.02, d));
       dirV.copy(axV).divideScalar(Math.max(d, 1e-4));
       hcV.copy(shV).addScaledVector(dirV, dd);                         // mano alcanzable
       var a = (LU * LU - LF * LF + dd * dd) / (2 * dd), h = Math.sqrt(Math.max(0, LU * LU - a * a));
-      poV.set(cs * sd * 0.6 + sn * 0.2, -0.85, -sn * sd * 0.6 + cs * 0.2);
+      var fw = flare < 0.5 ? -0.3 : 0.2;                                  // codo de tiro: debajo del hombro y hacia la canasta
+      poV.set(cs * sd * 0.6 * flare + sn * fw, -0.85, -sn * sd * 0.6 * flare + cs * fw);
       poV.addScaledVector(dirV, -poV.dot(dirV)).normalize();
       elV.copy(shV).addScaledVector(dirV, a).addScaledVector(poV, h);
-      var g = arms[i].userData;
+      var g = arm.userData;
       g.u.position.copy(shV); g.u.scale.set(1, LU, 1);
       axV.copy(elV).sub(shV).normalize(); g.u.quaternion.setFromUnitVectors(upV, axV);
       g.e.position.copy(elV);
       g.f.position.copy(elV); axV.copy(hcV).sub(elV); g.f.scale.set(1, Math.max(0.05, axV.length()), 1);
       g.f.quaternion.setFromUnitVectors(upV, axV.normalize());
-      hands[i].position.copy(hcV);
-      hands[i].quaternion.setFromUnitVectors(upV, axV);
+      hand.position.copy(hcV);
+      axV.copy(hcV).sub(elV).normalize();                            // y: antebrazo
+      pzV.copy(aim).sub(hcV); pzV.addScaledVector(axV, -pzV.dot(axV));   // z: palma hacia el objetivo
+      if (pzV.lengthSq() < 1e-6) pzV.set(0, 0, 1).addScaledVector(axV, -axV.z);
+      pzV.normalize(); pxV.crossVectors(axV, pzV);
+      hand.quaternion.setFromRotationMatrix(mM.makeBasis(pxV, axV, pzV));
+      if (flop) hand.rotateX(flop);                                  // muñeca: la mano cae hacia delante al soltar
+  }
+  function updateArms(dt, off) {
+    var th = player.rotation.y, sn = Math.sin(th), cs = Math.cos(th), hp = ball.hp, st = ball.state, rel = ball.rel;
+    var arms = [armL, armR], hands = [handL, handR], k = 1 - Math.exp(-dt * 25);
+    var sm = function (a, b, x) { x = Math.max(0, Math.min(1, (x - a) / (b - a))); return x * x * (3 - 2 * x); };
+    var fl = st === 'flying' ? sm(0.04, 0.16, rel) * (1 - sm(0.5, 0.8, rel)) : 0;    // 0 = sin gesto, 1 = muñeca caída
+    for (var i = 0; i < 2; i++) {
+      var sd = i === 0 ? -1 : 1, sh = sd === 1;                    // la mano derecha es la que tira
+      hV.set(hp.x + cs * (sh ? 0.17 : 0.3) * sd + sn * 0.05, hp.y + off - 0.02, hp.z - sn * (sh ? 0.17 : 0.3) * sd + cs * 0.05);
+      if (sh) fV.set(hp.x + cs * 0.08 - sn * 0.42, hp.y + JUMP + 0.62, hp.z - sn * 0.08 - cs * 0.42);   // brazo de tiro extendido arriba y adelante
+      else fV.set(hp.x + cs * 0.3 * sd - sn * 0.25, hp.y + JUMP + 0.2, hp.z - sn * 0.3 * sd - cs * 0.25);  // mano de ayuda abierta al lado
+      rV.set(player.position.x + cs * 0.5 * sd - sn * 0.05, player.position.y + 1.45, player.position.z - sn * 0.5 * sd - cs * 0.05);
+      if (st === 'flying') {
+        if (rel < 0.45) tgV.copy(hV).lerp(fV, sm(0, sh ? 0.1 : 0.07, rel));
+        else tgV.copy(fV).lerp(rV, sm(0.45, 0.95, rel));              // el brazo se queda arriba y baja al caer
+      } else tgV.copy(hV);
+      if (!handInit) handCur[i].copy(tgV); else handCur[i].lerp(tgV, k);
+      ik(body, arms[i], hands[i], handCur[i], sd, sn, cs, ballMesh.position, sh ? fl * 1.0 : fl * 0.25, sh ? 0.0 : 1);   // codo de tiro alineado con el hombro, sin abrirse
     }
+    /* piernas: tras el despegue las rodillas se flexionan hacia atrás (como en la secuencia del tiro) */
+    var tuck = st === 'flying' ? sm(0.04, 0.22, rel) * (1 - sm(0.42, 0.62, rel)) : 0;
+    for (var li = 0; li < 2; li++) { legG[li].rotation.x = 0; legG[li].userData.knee.rotation.x = 0; }   /* piernas rectas en el tiro: no se recogen hacia atrás */
     handInit = true;
+  }
+
+  /* ---------- Academia en 3D: el muñeco hace la secuencia (bote, paso 0, 1, 2, tiro) ---------- */
+  var acad = { lean: 0, hand: 'R', off: 0, on: false, tokens: '', t: 0, run: false, loop: false, speed: 1, onTok: null, onEnd: null, last: -1, ended: false, pending: null, prev: 'logo', zs: [], zStart: 8, zEnd: 2.8, midZ: 5.4, feet: [], mats: null, hh: [new THREE.Vector3(), new THREE.Vector3()], hInit: false };
+  var ACD = 0.8, ACMV = 'BG123D';
+  function acadMats() {
+    if (acad.mats) return acad.mats;
+    function mk(txt, bg, fg) {
+      var cv = document.createElement('canvas'); cv.width = cv.height = 128; var c = cv.getContext('2d');
+      c.fillStyle = bg; c.beginPath(); c.arc(64, 64, 60, 0, Math.PI * 2); c.fill();
+      c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 6; c.stroke();
+      if (txt) { c.fillStyle = fg; c.font = '800 84px Montserrat, Arial, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, 64, 70); }
+      var t = new THREE.CanvasTexture(cv); return new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false });
+    }
+    acad.mats = { G: mk('0', '#f59e0b', '#1b1200'), '1': mk('1', '#1eabd1', '#fff'), '2': mk('2', '#1eabd1', '#fff'), '3': mk('3', '#d9534f', '#fff'), B: mk('', '#9db7c6', ''), D: mk('', '#9db7c6', '') };
+    return acad.mats;
+  }
+  function acadSetup(tokens) {
+    acad.tokens = tokens; acad.t = 0; acad.last = -1; acad.ended = false; acad.hInit = false;
+    var mv = 0, i; for (i = 0; i < tokens.length; i++) if (ACMV.indexOf(tokens[i]) >= 0) mv++;
+    var SP = 1.0; acad.zEnd = 2.8; acad.zStart = acad.zEnd + SP * mv; acad.midZ = (acad.zStart + acad.zEnd) / 2;
+    acad.zs = []; var z = acad.zStart;
+    for (i = 0; i < tokens.length; i++) { if (ACMV.indexOf(tokens[i]) >= 0) z -= SP; acad.zs.push(z); }
+    acad.st = []; acad.dr = []; var cum = 0;
+    for (i = 0; i < tokens.length; i++) { var c0 = tokens.charAt(i), d0 = c0 === 'S' ? 0.8 : c0 === 'R' ? 0.9 : c0 === 'G' ? 0.8 : 0.5; acad.st.push(cum); acad.dr.push(d0); cum += d0; }   /* el paso 0 se queda un momento: balón en manos y pie apoyado */
+    acad.tot = cum;
+    acad.feet.forEach(function (m) { m.visible = false; });
+  }
+  function acadFoot(k) {
+    while (acad.feet.length <= k) { var m = new THREE.Mesh(new THREE.CircleGeometry(1, 28), acadMats().B); m.rotation.x = -Math.PI / 2; m.position.y = 0.02; m.renderOrder = 2; m.visible = false; court.add(m); acad.feet.push(m); }
+    return acad.feet[k];
+  }
+  var acEase = function (p) { return p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; };
+  function updateAcad(dt, time, ps) {
+    var tk = acad.tokens, n = tk.length, i;
+    if (acad.pending) { var cb = acad.pending; acad.pending = null; cb(); }
+    if (acad.piv) { updatePiv(dt, time, ps); return; }
+    if (acad.pivShown) hidePiv();
+    if (acad.pass) { updatePass(dt, time, ps); return; }
+    if (acad.passShown) hidePass();
+    legG[0].position.y = legG[1].position.y = 0.98;
+    if (acad.run && n) {
+      acad.t += dt * acad.speed;
+      if (acad.t >= acad.tot + 1.3) { if (acad.loop) { acad.t = 0; acad.last = -1; acad.hInit = false; } else { acad.t = acad.tot + 1.3; acad.run = false; if (!acad.ended) { acad.ended = true; if (acad.onEnd) acad.onEnd(); } } }
+    }
+    var t = acad.t, idx = 0; for (i = 0; i < n; i++) if (t >= acad.st[i]) idx = i;
+    if (n && t < acad.tot && idx !== acad.last) { acad.last = idx; if (acad.onTok) acad.onTok(idx, tk.charAt(idx)); }
+    /* posición del jugador */
+    var dSd = acad.hand === 'L' ? -1 : 1;                           // mano que bota: el paso 0 cae en el pie contrario
+    var gI = tk.indexOf('G'), kG = 0, off = 0;
+    if (gI >= 0) { for (i = 0; i < gI; i++) if (ACMV.indexOf(tk.charAt(i)) >= 0) kG++; off = (((dSd === 1 ? 0 : 1) - kG) % 2 + 2) % 2; }
+    var z = acad.zStart, k = 0, lastMv = -1, swing0 = 0, swing1 = 0, landedK = 0, curMoveK = -1, curP = 0;
+    for (i = 0; i < n; i++) {
+      var isMv = ACMV.indexOf(tk.charAt(i)) >= 0, st = acad.st[i];
+      if (isMv) {
+        var prev = lastMv < 0 ? acad.zStart : acad.zs[lastMv], p = Math.max(0, Math.min(1, (t - st) / Math.min(0.5, acad.dr[i])));
+        if (t >= st) z = prev + (acad.zs[i] - prev) * p;                // velocidad constante: carrera continua
+        if (t >= st && p < 1) { curMoveK = k; curP = p; }
+        var kind = tk.charAt(i), f = acadFoot(k);
+        if (p >= 1) {
+          f.visible = true; f.material = acadMats()[kind]; f.scale.setScalar(kind === 'B' || kind === 'D' ? 0.13 : 0.3);
+          f.position.set((k + off) % 2 ? 0.22 : -0.22, 0.02, acad.zs[i] + 0.04);
+        } else f.visible = false;
+        lastMv = i; k++;
+      }
+    }
+    for (var j = k; j < acad.feet.length; j++) acad.feet[j].visible = false;
+    if (n && t >= acad.tot) { z = lastMv >= 0 ? acad.zs[lastMv] : acad.zStart; }
+    var sIdx = tk.indexOf('S'), gIdx = tk.indexOf('G'), rIdx = tk.indexOf('R'), dIdx = tk.indexOf('D');
+    var phase = 0;                                                // 0 bote, 1 en manos, 2 tiro
+    var loc = n ? (t >= acad.tot ? 1 : (t - acad.st[idx]) / acad.dr[idx]) : 0, crouch = 0, jumpY = 0;
+    /* el balón se recoge cuando el pie YA está apoyado (final del paso 0), no con el pie en el aire */
+    if (gIdx >= 0 && (idx > gIdx || (idx === gIdx && (t - acad.st[idx] >= 0.5 || rIdx >= 0)))) phase = 1;
+    if (dIdx >= 0 && idx >= dIdx) phase = 0;
+    if (sIdx >= 0 && idx >= sIdx) phase = 2;
+    if (phase === 2) {
+      crouch = -0.18 * Math.sin(Math.PI * Math.min(1, loc / 0.3));
+      jumpY = loc > 0.25 ? 1.0 * Math.sin(Math.PI * Math.min(1, (loc - 0.25) / 0.7)) : 0;
+    }
+    if (t >= acad.tot) { crouch = 0; jumpY = 0; }
+    var px = 0, pz = z;
+    var running = curMoveK >= 0 && phase !== 2;
+    if (running) jumpY += 0.035 * Math.abs(Math.sin(Math.PI * (curMoveK + curP)));          // fase de vuelo al correr
+    acad.lean += ((running ? -0.2 : 0) - acad.lean) * Math.min(1, dt * 12);
+    player.visible = pShadow.visible = true; player.scale.setScalar(Math.max(0.001, ps));
+    player.position.set(px, jumpY, pz); player.rotation.y = 0;
+    body.position.y = crouch; body.rotation.x = acad.lean; legs.scale.y = 1.14 * (0.98 + crouch) / 0.98;
+    /* zancada continua: un ciclo completo = 2 apoyos; las piernas se cruzan sin parar en cada paso */
+    var psi = Math.PI * (curMoveK + off + curP), sL = running || (curMoveK >= 0 && phase === 2) ? Math.sin(psi) : 0, cL = running ? Math.cos(psi) : 0;
+    legG[0].rotation.x = sL * 0.8; legG[1].rotation.x = -sL * 0.8;
+    var gHold = gIdx >= 0 && idx === gIdx && t - acad.st[gIdx] >= 0.5 && rIdx < 0, gBl = 0, gPl = 0;   // paso 0: solo UN pie apoyado
+    if (gIdx >= 0 && idx === gIdx && rIdx < 0) {
+      gBl = Math.max(0, Math.min(1, (t - acad.st[gIdx] - 0.3) / 0.25)); gBl = gBl * gBl * (3 - 2 * gBl);
+      gPl = (kG + off) % 2 ? 1 : 0;                                  // pierna apoyada; la otra queda levantada hacia atrás
+      var fr = 1 - gPl;
+      legG[gPl].rotation.x += (0.18 - legG[gPl].rotation.x) * gBl;
+      legG[fr].rotation.x += (-1.0 - legG[fr].rotation.x) * gBl;
+    }
+    var lf = dSd === -1 ? sL : -sL;                                  // pierna del lado de la mano que bota: adelante (+) o atrás (−)
+    body.rotation.y = running ? 0.12 * lf : 0;                       // ligera torsión de tronco
+    var shL = acad.hand === 'L' ? 0 : 1, kn = 0;                    // lado de la mano que tira
+    if (phase === 2 && t < acad.tot) {                             // entrada a canasta: sube la rodilla del lado de la mano que tira
+      kn = sstep(0, 0.22, loc) * (1 - sstep(0.72, 1.0, loc));       // la rodilla sube ANTES de despegar (el salto empieza en loc 0.25)
+      legG[shL].rotation.x = 1.85 * kn; legG[1 - shL].rotation.x = 0.1 * kn;
+    }
+    for (var lq = 0; lq < 2; lq++) {
+      var rx0 = legG[lq].rotation.x, kb = lq === shL ? 1.7 * kn : 0, rb = 0;
+      if (gBl > 0 && lq === 1 - gPl) kb = 2.0 * gBl;
+      if (running) { var cc = lq === 0 ? cL : -cL; rb = 0.25 + 1.0 * Math.max(0, cc) + (rx0 < 0 ? -rx0 * 0.5 : 0); }   // la rodilla se flexiona al adelantar la pierna
+      legG[lq].userData.knee.rotation.x = -Math.max(kb, rb);
+    }
+    pony.visible = who.sex === 'f'; pony.rotation.x = -0.3 - jumpY * 0.5 + Math.sin(time * 2.2) * 0.04; pony.rotation.z = Math.sin(time * 1.6) * 0.05;
+    pShadow.position.set(px, 0.012, pz); pShadow.scale.setScalar(0.55 * (1 - jumpY * 0.35));
+    player.updateMatrixWorld(true);
+    /* el momento clave: pie apoyado + balón en las manos (aro naranja que late y aviso en pantalla) */
+    if (!acad.ring) { acad.ring = new THREE.Mesh(new THREE.RingGeometry(0.36, 0.47, 40), new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.9, depthWrite: false })); acad.ring.rotation.x = -Math.PI / 2; acad.ring.renderOrder = 3; court.add(acad.ring); }
+    var gOn = gIdx >= 0 && phase >= 1 && t - acad.st[gIdx] >= 0.5;
+    if (gOn) {
+      acad.ring.position.set((kG + off) % 2 ? 0.22 : -0.22, 0.03, acad.zs[gIdx] + 0.04);
+      acad.ring.scale.setScalar(1 + 0.18 * Math.sin(time * 9)); acad.ring.visible = true;
+      if (!acad.gFired) { acad.gFired = true; try { window.dispatchEvent(new CustomEvent('bbgather', { detail: { foot: (kG + off) % 2 ? 'dcho.' : 'izq.' } })); } catch (e) {} }
+    } else { acad.ring.visible = false; if (gIdx < 0 || t < acad.st[gIdx]) acad.gFired = false; }
+    /* balón */
+    var bx = 0, by = 0, bz = 0, showB = true, ts = sIdx >= 0 ? t - acad.st[sIdx] : -1;
+    if (rIdx >= 0 && t < acad.st[rIdx]) showB = false;
+    if (rIdx >= 0 && idx === rIdx && phase !== 2) {              // llega el pase
+      var q = Math.min(1, loc / 0.85); bx = 4.2 * (1 - q); by = 3.2 - 1.1 * q; bz = pz - 0.9 * q + 0.4 * (1 - q) * 0;
+    } else if (phase === 0) {
+      var sb = n && t < acad.tot ? Math.abs(Math.sin(Math.PI * loc)) : 0; bx = px + 0.5 * dSd; by = RB + 1.15 * sb; bz = pz - 0.2;
+    } else if (phase === 1) {
+      var cu = (gIdx >= 0 && rIdx < 0 && idx === gIdx) ? Math.min(1, (t - acad.st[gIdx] - 0.5) / 0.22) : 1; cu = cu * cu * (3 - 2 * cu);   // el balón sube de la mano que bota al pecho
+      bx = px + 0.5 * dSd * (1 - cu); by = 1.45 + 0.6 * cu; bz = pz - 0.2 - 0.3 * cu;
+    }
+    else {
+      var f2 = Math.max(0, Math.min(1, (ts - 0.45 * ACD) / 0.95));
+      if (ts < 0.45 * ACD) { bx = px; by = 2.05 + jumpY + 0.9 * Math.min(1, ts / (0.45 * ACD)); bz = pz - 0.5; }
+      else if (f2 < 1) { var sx = 0, sy = 2.95 + jumpY, sz = pz - 0.5; bx = sx * (1 - f2); by = sy + (H - sy) * f2 + Math.sin(Math.PI * f2) * 1.7; bz = sz + (0 - sz) * f2; if (f2 > 0.93) netSway = 1; }
+      else { var tau = ts - 0.45 * ACD - 0.95; bx = 0; bz = 0; by = Math.max(RB, H - 0.5 * 16 * tau * tau); }
+    }
+    ballMesh.visible = showB; shadow.visible = showB;
+    ballMesh.scale.setScalar(RB); ballMesh.position.set(bx, by, bz); ballMesh.rotation.x -= dt * 2;
+    shadow.position.set(bx, 0.012, bz); shadow.scale.setScalar(RB * (1.1 + by * 0.04)); shadow.material.opacity = 0.32 / (1 + by * 0.35);
+    aimDots.visible = false;
+    /* manos */
+    var kk = 1 - Math.exp(-dt * 16), sd, tg = [new THREE.Vector3(), new THREE.Vector3()];
+    for (var h = 0; h < 2; h++) {
+      sd = h === 0 ? -1 : 1;
+      if (phase === 0) {
+        if (sd === dSd) tg[h].set(px + 0.5 * dSd, Math.max(1.35, Math.min(1.75, by + 0.42)), pz - 0.2);
+        else { var pump = running ? lf : 0; tg[h].set(px - 0.5 * dSd, 1.62 + 0.12 * Math.abs(pump), pz - 0.45 - 0.3 * pump); }
+      } else if (phase === 1) tg[h].set(bx + 0.3 * sd, by, bz + 0.02);        // las dos manos a los lados del balón
+      else {
+        var up = Math.min(1, ts / (0.45 * ACD));
+        tg[h].set(px + 0.25 * sd, 2.05 + (3.55 + jumpY - 2.05) * up, pz - 0.5 - 0.1 * up);
+      }
+      if (rIdx >= 0 && idx === rIdx && phase !== 2) tg[h].set(px + 0.3 * sd, 2.35, pz - 0.8);
+      if (!acad.hInit) acad.hh[h].copy(tg[h]); else acad.hh[h].lerp(tg[h], kk);
+    }
+    acad.hInit = true;
+    armL.visible = armR.visible = handL.visible = handR.visible = ps > 0.98;
+    if (ps > 0.98) { ik(body, armL, handL, acad.hh[0], -1, 0, 1, ballMesh.position, 0, phase === 2 && dSd === -1 ? 0 : 1); ik(body, armR, handR, acad.hh[1], 1, 0, 1, ballMesh.position, 0, phase === 2 && dSd === 1 ? 0 : 1); }
+    handInit = false;
+  }
+
+  /* ---------- Técnica de pases: pasador (el jugador) y receptor (el otro muñeco) ---------- */
+  var PZ = 9.6, RZ = 2.8, PASS = {
+    chest:  { fd: 0.75,  hold: 2.0,  rel: [2.1, 1.15],  ask: [2.1, 0.95] },
+    bounce: { fd: 1.1, hold: 1.85, rel: [1.4, 1.1],   ask: [1.5, 0.9] },
+    over:   { fd: 1.05, hold: 3.25, rel: [2.95, 0.8],  ask: [2.5, 0.85] }
+  };
+  function sstep(a, b, x) { x = Math.max(0, Math.min(1, (x - a) / (b - a))); return x * x * (3 - 2 * x); }
+  function hidePass() {
+    acad.passShown = false; dP.visible = dShadow.visible = false;
+    dArmL.visible = dArmR.visible = dHandL.visible = dHandR.visible = false; dHandInit = false;
+    dBody.rotation.x = 0; dBody.position.y = 0;
+    if (acad.rigs) { var rr = acad.rigs, q; for (q = 0; q < 2; q++) { rr[1].lg[q].rotation.x = 0; rr[1].lg[q].position.y = 0.98; rr[1].kn[q].rotation.x = 0; rr[0].lg[q].position.y = 0.98; } dLegs.scale.y = 1.14; dP.rotation.y = 0; player.rotation.y = 0; }
+  }
+  var pAim = [new THREE.Vector3(), new THREE.Vector3()], pvH = [new THREE.Vector3(), new THREE.Vector3()], pBall = new THREE.Vector3(), wTmp = new THREE.Vector3();
+  var rigH = [[new THREE.Vector3(), new THREE.Vector3()], [new THREE.Vector3(), new THREE.Vector3()]];
+  function getRigs() {
+    if (acad.rigs) return acad.rigs;
+    var dLG = [], dKn = [], i, ix;
+    for (i = 0; i < 2; i++) { dLG[i] = dLegs.children[legs.children.indexOf(legG[i])]; ix = legG[i].children.indexOf(legG[i].userData.knee); dKn[i] = dLG[i].children[ix]; }
+    acad.rigs = [
+      { root: player, sh: pShadow, body: body, legs: legs, lg: legG, kn: [legG[0].userData.knee, legG[1].userData.knee], aL: armL, aR: armR, hL: handL, hR: handR, cs: 1 },
+      { root: dP, sh: dShadow, body: dBody, legs: dLegs, lg: dLG, kn: dKn, aL: dArmL, aR: dArmR, hL: dHandL, hR: dHandR, cs: -1 }];
+    return acad.rigs;
+  }
+  function updatePass(dt, time, ps) {
+    var P = acad.pass, cfg = PASS[P.type], i, sd, RGS = getRigs();
+    if (P.run) { P.t += dt * acad.speed; }
+    var tr = 1.15, fd = cfg.fd * (P.fs || 1), tc = tr + fd, Tt = tc + 1.4;
+    if (P.t >= Tt) {
+      if (P.manual) { P.t = 0; P.run = false; P.state = 'ready'; P.pop = 0; P.fs = 1; }
+      else if (P.loop) { P.t = 0.3; P.leg = 1 - (P.leg || 0); P.pop = 1; } else { P.t = Tt; P.run = false; }
+    }
+    var leg = P.leg || 0, MID = PZ + RZ;
+    var RP = RGS[leg], RR = RGS[1 - leg];                                           // pasador y receptor (rigs)
+    function W(v) { if (leg) { v.x = -v.x; v.z = MID - v.z; } return v; }          // marco virtual (pasa el jugador) -> mundo
+    var t = P.t, ready = P.manual && P.state === 'ready';
+    P.pullS = (P.pullS || 0) + ((ready ? (P.pull || 0) : 0) - (P.pullS || 0)) * Math.min(1, dt * 14);
+    var pl = P.pullS;
+    acad.feet.forEach(function (m) { m.visible = false; }); if (acad.ring) acad.ring.visible = false;
+    acad.passShown = true;
+    /* --- pasador --- */
+    var u1 = sstep(0.62, tr, t) * (1 - sstep(tr + 0.55, tr + 1.2, t));
+    var ex = sstep(0.62, tr, t);
+    var zp = PZ - 0.6 * u1;
+    player.visible = pShadow.visible = true; player.scale.setScalar(Math.max(0.001, ps));
+    dP.visible = dShadow.visible = true; dP.scale.setScalar(Math.max(0.001, ps));
+    var crouchP = -0.06 * sstep(0.2, 0.6, ready ? 1 : t) * (1 - ex) - 0.26 * u1;
+    wTmp.set(0, 0, zp); W(wTmp);
+    RP.root.position.set(0, 0, wTmp.z); RP.root.rotation.y = leg ? Math.PI : 0;
+    RP.body.position.y = crouchP; RP.legs.scale.y = 1.14 * (0.98 + crouchP) / 0.98; RP.body.rotation.x = -0.1 * u1; RP.body.rotation.y = 0;
+    RP.lg[0].rotation.x = -0.52 * u1; RP.lg[1].rotation.x = 1.05 * u1; RP.lg[0].position.y = 0.98 - 0.98 * (1 - Math.cos(0.52 * u1)); RP.lg[1].position.y = 0.98;   /* pie de atrás clavado; la derecha se adelanta */
+    RP.kn[0].rotation.x = -0.05 * u1; RP.kn[1].rotation.x = -1.2 * u1;
+    pony.visible = who.sex === 'f'; pony.rotation.x = -0.3 + Math.sin(time * 2.2) * 0.04; pony.rotation.z = Math.sin(time * 1.6) * 0.05;
+    RP.sh.position.set(0, 0.012, wTmp.z); RP.sh.scale.setScalar(0.55);
+    RP.root.updateMatrixWorld(true);
+    /* --- receptor --- */
+    var catchK = sstep(tc - 0.12, tc + 0.18, t), askK = sstep(0.25, 0.75, ready ? 1 : t);
+    var crR = -0.07 * sstep(tc - 0.1, tc + 0.1, t) * (1 - sstep(tc + 0.3, tc + 0.7, t)) - 0.03;
+    wTmp.set(0, 0, RZ); W(wTmp);
+    RR.root.position.set(0, 0, wTmp.z); RR.root.rotation.y = leg ? 0 : Math.PI;
+    RR.body.position.y = crR; RR.legs.scale.y = 1.14 * (0.98 + crR) / 0.98; RR.body.rotation.x = 0; RR.body.rotation.y = 0;
+    for (i = 0; i < 2; i++) { RR.lg[i].rotation.x = 0; RR.lg[i].position.y = 0.98; RR.kn[i].rotation.x = 0; }
+    RR.sh.position.set(0, 0.012, wTmp.z); RR.sh.scale.setScalar(0.55);
+    if (leg) { pony.visible = who.sex === 'f'; }
+    RR.root.updateMatrixWorld(true);
+    /* objetivos de manos (virtuales -> mundo) */
+    var hy = cfg.hold, hz = zp - 0.46, ry = cfg.rel[0], rz = zp - cfg.rel[1];
+    if (P.type === 'over') hz = zp - 0.15;
+    
+    var kR = 1 - Math.exp(-dt * 16), hc = rigH[leg], rc = rigH[1 - leg];
+    for (i = 0; i < 2; i++) {
+      sd = i === 0 ? -1 : 1;
+      pvH[i].set(0.27 * sd * (1 - 0.25 * ex), hy + (ry - hy) * ex, hz + (rz - hz) * ex);
+      if (P.type === 'over') pvH[i].x = 0.22 * sd;
+      W(pvH[i]);
+      var lx = 0.45 * sd, ly = 1.45, lz = 0.12, ax = 0.2 * sd, ay = cfg.ask[0], az = cfg.ask[1], cx = 0.27 * sd, cy = 2.0, cz = 0.46;
+      var gx = lx + (ax - lx) * askK, gy = ly + (ay - ly) * askK, gz = lz + (az - lz) * askK;
+      gx += (cx - gx) * catchK; gy += (cy - gy) * catchK; gz += (cz - gz) * catchK;
+      wTmp.set(-gx, gy, RZ + gz); W(wTmp);
+      if (!P.hInit) { hc[i].copy(pvH[i]); rc[i].copy(wTmp); } else { hc[i].copy(pvH[i]); rc[i].lerp(wTmp, kR); }
+    }
+    P.hInit = true;
+    /* balón */
+    var bx = 0, by = 0, bz = 0;
+    if (t < tr) {
+      by = (hc[0].y + hc[1].y) / 2; bz = (hc[0].z + hc[1].z) / 2; bx = (hc[0].x + hc[1].x) / 2;
+    } else if (t < tc) {
+      var f = (t - tr) / fd, z0 = zp - cfg.rel[1], z1 = RZ + cfg.ask[1] * 0.6 + 0.2;
+      bz = z0 + (z1 - z0) * f;
+      if (P.type === 'chest') by = cfg.rel[0] + (2.0 - cfg.rel[0]) * f;
+      else if (P.type === 'bounce') {
+        var fb = 0.58;
+        if (f < fb) { var s = f / fb; by = RB + (cfg.rel[0] - RB) * (1 - s) * (1 - s); } else { var s2 = (f - fb) / (1 - fb); by = RB + (1.35 - RB) * (1 - (1 - s2) * (1 - s2)); }
+      } else by = cfg.rel[0] + (2.3 - cfg.rel[0]) * f + 0.8 * Math.sin(Math.PI * f);
+      wTmp.set(0, by, bz); W(wTmp); bx = 0; bz = wTmp.z;
+    } else {
+      by = (rc[0].y + rc[1].y) / 2; bz = (rc[0].z + rc[1].z) / 2; bx = (rc[0].x + rc[1].x) / 2;
+    }
+    ballMesh.visible = true; shadow.visible = true;
+    P.pop = Math.min(1, (P.pop === undefined ? 1 : P.pop) + dt * 6);
+    ballMesh.scale.setScalar(RB * (0.4 + 0.6 * P.pop)); ballMesh.position.set(bx, by, bz);
+    if (t >= tr && t < tc) ballMesh.rotation.x -= dt * 9;
+    pBall.set(bx, by, bz);
+    shadow.position.set(bx, 0.012, bz); shadow.scale.setScalar(RB * (1.1 + by * 0.04)); shadow.material.opacity = 0.32 / (1 + by * 0.35);
+    aimDots.visible = false;
+    /* brazos */
+    var vis = ps > 0.98;
+    armL.visible = armR.visible = handL.visible = handR.visible = vis;
+    dArmL.visible = dArmR.visible = dHandL.visible = dHandR.visible = vis;
+    if (vis) {
+      var fl = sstep(tr, tr + 0.2, t) * (1 - sstep(tr + 0.9, tr + 1.3, t)) * (P.type === 'bounce' ? 0.5 : 0.8);
+      var fo = P.type !== 'over' ? sstep(tr - 0.05, tr + 0.18, t) * (1 - sstep(tr + 1.0, tr + 1.4, t)) : 0;   // brazos extendidos: palmas hacia fuera, pulgares abajo
+      var fl2 = P.type !== 'over' ? fl * 0.15 : fl, fwd = leg ? 1 : -1;
+      for (i = 0; i < 2; i++) { sd = i === 0 ? -1 : 1; pAim[i].copy(pBall).lerp(wTmp.set(hc[i].x + (leg ? -sd : sd) * 1.5, hc[i].y, hc[i].z), fo); }
+      ik(RP.body, RP.aL, RP.hL, hc[0], -1, 0, RP.cs, pAim[0], fl2, 0.3); ik(RP.body, RP.aR, RP.hR, hc[1], 1, 0, RP.cs, pAim[1], fl2, 0.3);
+      ik(RR.body, RR.aL, RR.hL, rc[0], -1, 0, RR.cs, pBall, 0, 0.5); ik(RR.body, RR.aR, RR.hR, rc[1], 1, 0, RR.cs, pBall, 0, 0.5);
+    }
+    handInit = false;
+  }
+
+  /* ---------- Pivotes: pie de pivote fijo, el otro pie se mueve ---------- */
+  var PIV_Z = 6.2, PIVT = { comp: 11.8, front: 5.0, back: 5.0, free: 6.2 }, CARD = null;
+  function hidePiv() {
+    acad.pivShown = false; if (acad.ring) acad.ring.visible = false;
+    player.rotation.y = 0; body.rotation.x = body.rotation.y = 0; legs.scale.y = 1.14;
+    for (var q = 0; q < 2; q++) { legG[q].rotation.x = legG[q].rotation.z = 0; legG[q].position.y = 0.98; legG[q].position.x = q ? 0.145 : -0.145; legG[q].userData.knee.rotation.x = 0; }
+  }
+  function updatePiv(dt, time, ps) {
+    var V = acad.piv, i, sd;
+    if (acad.passShown) hidePass();
+    if (V.run) V.t += dt * acad.speed;
+    var Tt = PIVT[V.type]; if (V.t >= Tt) { V.t = V.loop ? 0 : Tt; V.k = -2; }
+    var t = V.t, pf = V.pf, ff = 1 - pf, fs = ff === 0 ? -1 : 1, psd = pf === 0 ? -1 : 1;
+    acad.pivShown = true;
+    acad.feet.forEach(function (m) { m.visible = false; });
+    var th = 0, step = 0, lift = 0, fwdA = 0, sideA = 0, e;
+    if (V.type === 'comp') {                                                          // brújula: N-E-S-O y al contrario
+      var pr = 0, ii, s0, wk;
+      for (ii = 0; ii < 8; ii++) {
+        s0 = ii < 4 ? 0.6 + 1.3 * ii : 6.2 + 1.3 * (ii - 4);
+        wk = sstep(s0, s0 + 0.8, t); pr += ii < 4 ? wk : -wk;
+        if (t >= s0 && t < s0 + 0.8) lift = Math.sin(Math.PI * (t - s0) / 0.8);
+        if (t >= s0 && V.k !== ii && ii >= (V.k < 0 ? 0 : V.k)) { V.k = ii; try { window.dispatchEvent(new CustomEvent('bbpivot', { detail: { txt: 'Giro ' + (ii < 4 ? '→ ' : '← ') + ['Este', 'Sur', 'Oeste', 'Norte', 'Oeste', 'Sur', 'Este', 'Norte'][ii] } })); } catch (er) {} }
+      }
+      th = (pf === 0 ? 1 : -1) * (Math.PI / 2) * pr; e = Math.min(1, Math.abs(pr)); fwdA = 0.22 * lift;
+    } else if (V.type === 'front' || V.type === 'back') {
+      var dir = (V.type === 'front' ? 1 : -1) * (pf === 0 ? 1 : -1);               // giro de frente: el pie libre pasa por delante
+      e = sstep(0.8, 1.9, t) * (1 - sstep(3.0, 4.1, t));
+      th = dir * Math.PI * 0.62 * e;
+      var mv = sstep(0.8, 1.9, t) * (1 - sstep(1.9, 1.91, t)) + sstep(3.0, 4.1, t) * (1 - sstep(4.1, 4.11, t));
+      lift = Math.sin(Math.PI * Math.min(1, Math.max(0, (t - 0.8) / 1.1))) * (t < 2.5 ? 1 : 0) + Math.sin(Math.PI * Math.min(1, Math.max(0, (t - 3.0) / 1.1))) * (t >= 2.5 ? 1 : 0);
+      fwdA = 0.22 * (V.type === 'front' ? 1 : -0.6) * lift;
+    } else {                                                                         // sin giro: el pie libre adelante, atrás y al lado
+      var f1 = sstep(0.7, 1.3, t) * (1 - sstep(1.9, 2.5, t));
+      var f2 = sstep(2.7, 3.3, t) * (1 - sstep(4.0, 4.6, t));
+      var f3 = sstep(4.8, 5.3, t) * (1 - sstep(5.6, 6.1, t));
+      fwdA = 0.62 * f1 - 0.55 * f2; sideA = 0.5 * f3;
+      lift = Math.max(Math.sin(Math.PI * Math.min(1, Math.max(0, (t - 0.7) / 0.6))) * (t < 1.4 ? 1 : 0), Math.sin(Math.PI * Math.min(1, Math.max(0, (t - 1.9) / 0.6))) * (t > 1.5 && t < 2.6 ? 1 : 0),
+        Math.sin(Math.PI * Math.min(1, Math.max(0, (t - 2.7) / 0.6))) * (t > 2.5 && t < 3.4 ? 1 : 0), Math.sin(Math.PI * Math.min(1, Math.max(0, (t - 4.0) / 0.6))) * (t > 3.5 && t < 4.7 ? 1 : 0),
+        Math.sin(Math.PI * Math.min(1, Math.max(0, (t - 4.8) / 0.5))) * (t > 4.6 && t < 5.4 ? 1 : 0), Math.sin(Math.PI * Math.min(1, Math.max(0, (t - 5.6) / 0.5))) * (t > 5.5 ? 1 : 0)) * 0.7;
+    }
+    var sn = Math.sin(th), cs = Math.cos(th), fx = psd * 0.34;
+    var crouch = -0.15 * sstep(0.0, 0.5, t) - 0.03 * Math.sin(Math.PI * Math.min(1, lift));
+    player.visible = pShadow.visible = true; player.scale.setScalar(Math.max(0.001, ps));
+    dP.visible = dShadow.visible = false;
+    player.rotation.y = th; player.position.set(-cs * fx, 0, PIV_Z + sn * fx);
+    body.position.y = crouch; legs.scale.y = 1.14 * (0.98 + crouch) / 0.98; body.rotation.x = 0.05; body.rotation.y = 0;
+    var pl = legG[pf], fl = legG[ff];
+    legG[0].position.x = -0.34; legG[1].position.x = 0.34;
+    pl.rotation.x = 0.35; pl.rotation.z = 0; pl.position.y = 0.98; pl.userData.knee.rotation.x = -0.7;     // pie de pivote: clavado, rodilla flexionada
+    fl.rotation.x = fwdA + 0.35; fl.rotation.z = fs * sideA;
+    fl.position.y = 0.98 - 0.98 * (Math.cos(0.35) - Math.cos(fl.rotation.x) * Math.cos(fl.rotation.z));
+    fl.userData.knee.rotation.x = -0.7 - 0.6 * lift;
+    pony.visible = who.sex === 'f'; pony.rotation.x = -0.3 + Math.sin(time * 2.2) * 0.04; pony.rotation.z = Math.sin(time * 1.6) * 0.05;
+    pShadow.position.set(player.position.x, 0.012, player.position.z); pShadow.scale.setScalar(0.55);
+    player.updateMatrixWorld(true);
+    /* pie de pivote marcado */
+    if (!acad.ring) acad.ring = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.3, 40), new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.9, depthWrite: false }));
+    acad.ring.rotation.x = -Math.PI / 2; acad.ring.position.set(0, 0.03, PIV_Z); acad.ring.scale.setScalar(0.8 + 0.1 * Math.sin(time * 6)); acad.ring.visible = true;
+    /* balón y manos, protegidos delante del pecho; el balón acompaña al giro */
+    var hy = 1.85 + crouch, hzL = -0.46, kH = 1 - Math.exp(-dt * 25), vis = ps > 0.98;
+    for (i = 0; i < 2; i++) {
+      sd = i === 0 ? -1 : 1;
+      var lx = 0.27 * sd, lz = hzL + (V.type === 'free' ? 0 : -0.04 * e);
+      tgV.set(player.position.x + lx * cs + lz * sn, hy, player.position.z - lx * sn + lz * cs);
+      if (!V.hInit) handCur[i].copy(tgV); else handCur[i].lerp(tgV, kH);
+    }
+    V.hInit = true;
+    var bx = (handCur[0].x + handCur[1].x) / 2, by = (handCur[0].y + handCur[1].y) / 2, bz = (handCur[0].z + handCur[1].z) / 2;
+    ballMesh.visible = true; shadow.visible = true; ballMesh.scale.setScalar(RB); ballMesh.position.set(bx, by, bz);
+    shadow.position.set(bx, 0.012, bz); shadow.scale.setScalar(RB * (1.1 + by * 0.04)); shadow.material.opacity = 0.32 / (1 + by * 0.35);
+    aimDots.visible = false;
+    armL.visible = armR.visible = handL.visible = handR.visible = vis;
+    if (vis) { pBall.set(bx, by, bz); ik(body, armL, handL, handCur[0], -1, sn, cs, pBall, 0, 0.3); ik(body, armR, handR, handCur[1], 1, sn, cs, pBall, 0, 0.3); }
+    handInit = false;
+  }
+  window.BBAcad3D = {
+    enter: function (cb) {
+      acad.prev = mode; acad.on = true; acad.pending = cb || null;
+      if (mode !== 'court') setMode('court');
+      setMoving(false); setOrbit(true); oYaw = 0.95; oPitch = 0; oZoom = 1; cYaw = oYaw; cPitch = 0; cZoom = 1;
+      document.querySelector('.app').classList.add('acad-on'); hud.hidden = true; word.visible = false; hidePass(); dSt.init = false;
+    },
+    exit: function () {
+      acad.on = false; acad.run = false; acad.pass = null; acad.piv = null; if (acad.pivShown) hidePiv(); if (acad.passShown) hidePass(); acad.pending = null; acad.feet.forEach(function (m) { m.visible = false; }); if (acad.ring) acad.ring.visible = false;
+      legG[0].position.y = legG[1].position.y = 0.98; legG[0].rotation.x = legG[1].rotation.x = 0; legG[0].userData.knee.rotation.x = legG[1].userData.knee.rotation.x = 0; body.rotation.x = 0; acad.lean = 0;
+      document.querySelector('.app').classList.remove('acad-on'); word.visible = true;
+      setOrbit(false); oYaw = oPitch = 0; oZoom = 1;
+      if (camera.view && camera.view.enabled) camera.clearViewOffset();
+      if (acad.prev !== 'court') setMode('logo'); else { newBall(true); hud.hidden = false; hudText(); }
+    },
+    playPivot: function (type, o) { o = o || {}; acad.pass = null; acad.piv = { type: type, t: 0, run: true, loop: true, pf: o.foot === 'R' ? 1 : 0, hInit: false, k: -2 }; acad.passOrbit = false; acad.midZ = PIV_Z; oYaw = 2.5; oPitch = 0.12; oZoom = 1.3; },
+    playPass: function (type, o) { o = o || {}; acad.piv = null; acad.pass = { type: type, t: 0, run: !o.manual, loop: o.loop !== false, pop: 1, manual: !!o.manual, state: 'ready', pull: 0, pullS: 0, fs: 1, leg: 0, hInit: false }; acad.passOrbit = false; acad.midZ = (PZ + RZ) / 2; oYaw = 1.2; oPitch = 0.1; oZoom = 0.58; },
+    play: function (tokens, o) { o = o || {}; acad.piv = null; if (acad.pass) { acad.pass = null; oYaw = 0.95; oZoom = 1; } acad.midZ = (acad.zStart + acad.zEnd) / 2; acadSetup(tokens); acad.loop = !!o.loop; acad.onTok = o.onTok || null; acad.onEnd = o.onEnd || null; acad.run = true; },
+    stop: function () { acad.run = false; acad.pass = null; acad.piv = null; acad.feet.forEach(function (m) { m.visible = false; }); },
+    speed: function (s) { acad.speed = s; },
+    passOrbit: function (on) { acad.passOrbit = !!on; if (acad.pass) { acad.pass.pull = 0; } },
+    hand: function (h) { if (h) acad.hand = h; return acad.hand; }
+  };
+
+  /* ---------- defensor (1x1) ---------- */
+  var dSt = { x: 0, z: 4.5, init: false }, dHandCur = [new THREE.Vector3(), new THREE.Vector3()], dHandInit = false, dTgt = { x: 0, z: 0 };
+  function buildDefender() {
+    dP = player.clone(true);
+    var mp = new Map();
+    dP.traverse(function (o) { if (o.isMesh) { var m = o.material; if (!mp.has(m)) mp.set(m, m.clone()); o.material = mp.get(m); } });
+    function cm(k) { return mp.get(pMats[k]); }
+    cm('jc').color.setHex(0xd9534f); cm('sm').color.setHex(0xb03d3d); cm('trim').color.setHex(0xffffff);
+    cm('shoe').color.setHex(0xffffff); cm('hair').color.setHex(0x2a1d16); cm('band').color.setHex(0xffffff);
+    var cv = document.createElement('canvas'); cv.width = cv.height = 512;
+    var c = cv.getContext('2d'); c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+    c.font = '800 250px Montserrat, Arial, sans-serif'; c.lineWidth = 15; c.strokeStyle = '#7a2323'; c.fillStyle = '#ffffff';
+    c.strokeText('5', 256, 215); c.fillText('5', 256, 215);
+    var tx = new THREE.CanvasTexture(cv); tx.anisotropy = maxAniso; cm('jm').map = tx; cm('jm').needsUpdate = true;
+    dLegs = dP.children[pIdx.legs]; dBody = dP.children[pIdx.hold].children[0];
+    dP.visible = false; court.add(dP);
+    dArmL = mkArmG(); dArmR = mkArmG();
+    dHandL = mkHandG(-1); dHandR = mkHandG(1);
+    court.add(dArmL, dArmR, dHandL, dHandR);
+    dArmL.visible = dArmR.visible = dHandL.visible = dHandR.visible = false;
+    dShadow = new THREE.Mesh(pShadow.geometry, pShadow.material); dShadow.rotation.x = -Math.PI / 2; dShadow.scale.setScalar(0.55); dShadow.visible = false; court.add(dShadow);
+  }
+  function defIdeal() {                 // punto donde marcaría un defensor perfecto: entre el tirador y el aro, algo ladeado
+    var sx = ball.spawnX, sz = ball.spawnZ, d = Math.hypot(sx, sz) || 1;
+    dTgt.x = Math.max(-5, Math.min(5, sx - sx / d * 0.95 + 0.5)); dTgt.z = sz - sz / d * 0.95;
+  }
+  function contestFactor() {
+    if (!defOn) return 0;
+    defIdeal();
+    var err = Math.hypot(dSt.x - dTgt.x, dSt.z - dTgt.z);
+    return Math.max(0.12, 1 - err / 1.1);
+  }
+  function updateDefender(dt, time, ps, live) {
+    if (acad.on) { dSt.init = false; return; }                       // en la Academia el receptor lo controla updatePass
+    var show = defOn && ps > 0.98 && live;
+    dP.visible = dShadow.visible = show;
+    dArmL.visible = dArmR.visible = dHandL.visible = dHandR.visible = show;
+    if (!show) { dSt.init = false; dHandInit = false; return; }
+    defIdeal();
+    if (!dSt.init) { dSt.x = dTgt.x; dSt.z = dTgt.z; dSt.init = true; }
+    var ddx = dTgt.x - dSt.x, ddz = dTgt.z - dSt.z, dl = Math.hypot(ddx, ddz), mv = Math.min(dl, 3.2 * dt);
+    if (dl > 1e-4) { dSt.x += ddx / dl * mv; dSt.z += ddz / dl * mv; }
+    var sx = ball.spawnX, sz = ball.spawnZ;
+    var T = ball.state === 'windup' ? ball.wt : ball.state === 'flying' ? 0.28 + ball.rel : 99;
+    var jump = T < 1.0 ? 1.25 * Math.sin(Math.PI * T / 1.0) : 0;
+    var raise = T < 1.0 ? Math.max(0, Math.min(1, Math.min(T / 0.2, (1.0 - T) / 0.25))) : 0;
+    var px = dSt.x + Math.sin(time * 2.1) * 0.08, pz = dSt.z + Math.cos(time * 1.7) * 0.05;
+    var th = Math.atan2(px - sx, pz - sz), sn = Math.sin(th), cs = Math.cos(th);
+    dP.position.set(px, jump, pz); dP.rotation.y = th; dP.scale.setScalar(1);
+    var crouch = -0.06 + Math.sin(time * 3.2) * 0.02;
+    dBody.position.y = crouch; dLegs.scale.y = 1.14 * (0.98 + crouch) / 0.98;
+    dShadow.position.set(px, 0.012, pz); dShadow.scale.setScalar(0.55 * (1 - jump * 0.6));
+    dP.updateMatrixWorld(true);
+    var k = 1 - Math.exp(-dt * 18);
+    for (var i = 0; i < 2; i++) {
+      var sd = i === 0 ? -1 : 1, bob = Math.sin(time * 4 + i * 2) * 0.05;
+      var ix = px + cs * 0.62 * sd - sn * 0.42, iy = 2.05 + bob + jump, iz = pz - sn * 0.62 * sd - cs * 0.42;
+      var rx = px + cs * 0.2 * sd - sn * 0.12, ry = 3.55 + jump, rz = pz - sn * 0.2 * sd - cs * 0.12;
+      tgV.set(ix + (rx - ix) * raise, iy + (ry - iy) * raise, iz + (rz - iz) * raise);
+      if (!dHandInit) dHandCur[i].copy(tgV); else dHandCur[i].lerp(tgV, k);
+      aimD.set(dHandCur[i].x - sn, dHandCur[i].y + 0.1, dHandCur[i].z - cs);
+      ik(dBody, i === 0 ? dArmL : dArmR, i === 0 ? dHandL : dHandR, dHandCur[i], sd, sn, cs, aimD);
+    }
+    dHandInit = true;
   }
 
   function build() {
@@ -470,6 +1030,7 @@
     shadow = new THREE.Mesh(new THREE.CircleGeometry(1, 24), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3, depthWrite: false }));
     shadow.rotation.x = -Math.PI / 2; shadow.visible = false; court.add(shadow);
     buildPlayer();
+    buildDefender();
 
     /* suelo y líneas */
     var fc = document.createElement('canvas'); fc.width = fc.height = 256;
@@ -478,15 +1039,19 @@
     fx.fillStyle = gr; fx.fillRect(0, 0, 256, 256);
     floorMat = new THREE.MeshBasicMaterial({ color: 0xd3e8f2, map: new THREE.CanvasTexture(fc), transparent: true, opacity: 0, depthWrite: false });
     var floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), floorMat);
-    floor.rotation.x = -Math.PI / 2; floor.position.set(0, -0.002, 2); court.add(floor);
+    floor.renderOrder = -2; floor.rotation.x = -Math.PI / 2; floor.position.set(0, -0.002, 2); court.add(floor);
     lineMat = new THREE.MeshBasicMaterial({ color: CYAN, transparent: true, opacity: 0, depthWrite: false });
     function strip(w, d, x, z) {
       var m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), lineMat);
-      m.rotation.x = -Math.PI / 2; m.position.set(x, 0.004, z); court.add(m);
+      m.renderOrder = 1; m.rotation.x = -Math.PI / 2; m.position.set(x, 0.004, z); court.add(m);
     }
-    strip(0.08, 6.0, -2.2, 2.3); strip(0.08, 6.0, 2.2, 2.3); strip(4.48, 0.08, 0, 5.3); strip(4.48, 0.08, 0, -0.7);
+    strip(0.08, 6.0, -2.2, 2.3); strip(0.08, 6.0, 2.2, 2.3); strip(4.48, 0.08, 0, 5.3); strip(10.88, 0.08, 0, -0.7);
+    var A3 = Math.asin(4.05 / R3);
+    var arc3 = new THREE.Mesh(new THREE.RingGeometry(R3 - 0.07, R3 + 0.07, 120, 1, Math.PI + 0.6435, Math.PI - 2 * 0.6435), lineMat);
+    arc3.renderOrder = 1; arc3.rotation.x = -Math.PI / 2; arc3.position.set(0, 0.004, 0); court.add(arc3);
+    strip(0.08, 4.75, -5.4, 1.675); strip(0.08, 4.75, 5.4, 1.675);
     var ft = new THREE.Mesh(new THREE.RingGeometry(1.7, 1.78, 64, 1, 0, Math.PI), lineMat);
-    ft.rotation.x = -Math.PI / 2; ft.rotation.z = 0; ft.position.set(0, 0.004, 5.3); court.add(ft);
+    ft.renderOrder = 1; ft.rotation.x = -Math.PI / 2; ft.rotation.z = 0; ft.position.set(0, 0.004, 5.3); court.add(ft);
 
     /* tablero */
     boardG = new THREE.Group(); boardG.position.set(0, H + 0.9, ZB);
@@ -557,7 +1122,7 @@
   } catch (err) {}
   window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredPrompt = e; });
   window.addEventListener('appinstalled', function () { bInst.hidden = true; });
-  bInst.hidden = true;
+  bInst.hidden = isStandalone;
   function openInstall() {
     var ua = navigator.userAgent || '';
     var ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -614,7 +1179,7 @@
     var t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     logoDist = Math.max(5.9 / (2 * t), 6.5 / (2 * t * camera.aspect));
     var t2 = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    courtZ = Math.max(16, 7 + 2.7 / (t2 * camera.aspect));
+    courtZ = Math.max(15, 7 + 3.0 / (t2 * camera.aspect));
     camera.updateProjectionMatrix();
   }
   new ResizeObserver(fit).observe(stage);
@@ -624,8 +1189,8 @@
   var mode = 'logo', u = 0;                    // u: 0 logo -> 1 canasta
   var yaw = 0, pitch = 0, vYaw = 0, vPitch = 0, dragging = false, spin = false, sway = 1;
   var pointers = {}, lastPinch = 0, last = { x: 0, y: 0 };
-  var score = 0, tries = 0;
-  var ball = { p: new THREE.Vector3(), v: new THREE.Vector3(), state: 'ready', scored: false, t: 0, rest: 0, spawn: 0, spawnX: 0, spawnZ: 7, hp: new THREE.Vector3(), pend: new THREE.Vector3(), wt: 0, crouch0: 0, rel: 0 };
+  var score = 0, made = 0, tries = 0, defOn = false;
+  var ball = { p: new THREE.Vector3(), v: new THREE.Vector3(), state: 'ready', scored: false, t: 0, rest: 0, spawn: 0, spawnX: 0, spawnZ: 6, hp: new THREE.Vector3(), pend: new THREE.Vector3(), wt: 0, crouch0: 0, rel: 0 };
   var aim = null, netSway = 0, toastTimer = 0;
 
   function setHold(x, z) {            // el jugador está en (x, z) y sostiene el balón 0.5 por delante
@@ -635,13 +1200,13 @@
     ball.p.copy(ball.hp);
   }
   function newBall(first) {
-    if (first) { ball.spawnX = 0; ball.spawnZ = 7; }
+    if (first) { ball.spawnX = 0; ball.spawnZ = 6; }
     setHold(ball.spawnX, ball.spawnZ); ball.v.set(0, 0, 0);
-    ball.state = 'ready'; ball.scored = false; ball.t = 0; ball.rest = 0; ball.spawn = 0; ball.rel = 0; bodyOff = 0;
+    ball.state = 'ready'; ball.scored = false; ball.t = 0; ball.rest = 0; ball.spawn = 0; ball.rel = 0; bodyOff = 0; ball.land = -1; ball.scoreT = 0; ball.pts = 1;
     if (ballMesh) ballMesh.rotation.set(0, 0, 0);
   }
   function hudText() {
-    document.getElementById('hScore').textContent = 'Canastas ' + score + ' / ' + tries;
+    document.getElementById('hScore').textContent = 'Puntos ' + score + ' · ' + made + '/' + tries;
   }
   function showToast() {
     tWho.textContent = whoText();
@@ -695,22 +1260,23 @@
   function whoText() { return (who.num ? '#' + who.num : '') + (who.num && who.name ? ' · ' : '') + who.name; }
   /* ---------- mover jugador y mover campo ---------- */
   var moving = false, moveDrag = false;
-  var orbitOn = false, oYaw = 0, oPitch = 0, oZoom = 1, cYaw = 0, cPitch = 0, cZoom = 1;
+  var cPx = 0, cPz = 0, orbitOn = false, oYaw = 0, oPitch = 0, oZoom = 1, cYaw = 0, cPitch = 0, cZoom = 1;
   var ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), ballPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
   function moveTo(e) {
     var r = canvas.getBoundingClientRect();
     ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height * 2 - 1));
     ray.setFromCamera(ndc, camera);
     if (!ray.ray.intersectPlane(ballPlane, hit)) return;
-    var z = Math.max(2.5, Math.min(7, hit.z)), xl = 4;
+    var z = Math.max(2.5, Math.min(8.2, hit.z)), xl = 4.2;
     if (Math.abs(cYaw) < 0.3) {
       var dist = Math.max(4, camera.position.distanceTo(hit)), halfW = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect * dist;
-      xl = Math.min(4, Math.max(1, halfW - 0.8));
+      xl = Math.min(4.2, Math.max(1, halfW - 0.8));
     }
     var x = Math.max(-xl, Math.min(xl, hit.x));
     setHold(x, z);
   }
   function updateHint() {
+    bShoot.setAttribute('aria-pressed', !moving && !orbitOn);
     document.getElementById('hHint').textContent = moving ? 'Arrastra para colocar al jugador'
       : orbitOn ? 'Arrastra para girar el campo · pellizca para acercar' : 'Arrastra hacia abajo y suelta para lanzar';
   }
@@ -765,6 +1331,7 @@
   canvas.addEventListener('pointerdown', function (e) {
     canvas.setPointerCapture(e.pointerId);
     pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (acad.on && acad.pass && acad.pass.manual && !acad.passOrbit) { acad.pdrag = { y0: e.clientY }; return; }   // pase: echar atrás y soltar
     if (mode === 'court') {
       if (orbitOn) { last.x = e.clientX; last.y = e.clientY; lastPinch = 0; return; }
       if (u > 0.98 && ball.state === 'ready') {
@@ -778,6 +1345,7 @@
   canvas.addEventListener('pointermove', function (e) {
     if (!pointers[e.pointerId]) return;
     pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (acad.pdrag) { if (acad.pass) acad.pass.pull = Math.max(0, Math.min(1, (e.clientY - acad.pdrag.y0) / (stage.clientHeight * 0.22))); return; }
     if (mode === 'court') {
       if (orbitOn) {
         var oids = Object.keys(pointers);
@@ -808,13 +1376,19 @@
   });
   function up(e) {
     delete pointers[e.pointerId]; lastPinch = 0;
+    if (acad.pdrag) {
+      var PP = acad.pass; acad.pdrag = null;
+      if (PP && PP.manual && PP.state === 'ready' && PP.pull > 0.22) { PP.fs = 1.3 - 0.6 * PP.pull; PP.state = 'go'; PP.t = 0.45; PP.run = true; PP.pop = 1; }
+      if (PP) PP.pull = 0;
+      return;
+    }
     if (mode === 'court') { moveDrag = false; if (aim) { shoot(); aim = null; } return; }
     var ids = Object.keys(pointers);
     if (!ids.length) dragging = false;
     else { last.x = pointers[ids[0]].x; last.y = pointers[ids[0]].y; }
   }
   canvas.addEventListener('pointerup', up);
-  canvas.addEventListener('pointercancel', function (e) { delete pointers[e.pointerId]; aim = null; moveDrag = false; dragging = false; });
+  canvas.addEventListener('pointercancel', function (e) { delete pointers[e.pointerId]; acad.pdrag = null; if (acad.pass) acad.pass.pull = 0; aim = null; moveDrag = false; dragging = false; });
   canvas.addEventListener('wheel', function (e) {
     if (mode === 'court') {
       if (!orbitOn) return;
@@ -833,24 +1407,29 @@
     else if (k === 'ArrowUp') pitch = Math.max(-0.7, pitch - 0.1); else if (k === 'ArrowDown') pitch = Math.min(0.7, pitch + 0.1);
   });
 
-  var bMove = document.getElementById('bMove'), bField = document.getElementById('bField'), bSpin = document.getElementById('bSpin'), bMode = document.getElementById('bMode'), sub = document.getElementById('subtitle');
+  var bDef = document.getElementById('bDef'), bShoot = document.getElementById('bShoot'), bMove = document.getElementById('bMove'), bField = document.getElementById('bField'), bSpin = document.getElementById('bSpin'), bMode = document.getElementById('bMode'), sub = document.getElementById('subtitle');
   bSpin.addEventListener('click', function () { spin = !spin; bSpin.setAttribute('aria-pressed', spin); });
+  bDef.addEventListener('click', function () {
+    defOn = !defOn; bDef.setAttribute('aria-pressed', defOn);
+    document.getElementById('hHint').textContent = defOn ? '1x1: ¡el defensor te marca! Muévete para librarte' : 'Arrastra hacia abajo y suelta para lanzar';
+  });
+  bShoot.addEventListener('click', function () { if (mode === 'court') { setMoving(false); setOrbit(false); } });
   bMove.addEventListener('click', function () { if (mode === 'court') setMoving(!moving); });
   bField.addEventListener('click', function () { if (mode === 'court') setOrbit(!orbitOn); });
   bMode.addEventListener('click', function () { setMode(mode === 'logo' ? 'court' : 'logo'); });
   document.getElementById('bReset').addEventListener('click', function () {
-    if (mode === 'court') { score = 0; tries = 0; hudText(); newBall(true); setMoving(false); setOrbit(false); oYaw = oPitch = 0; oZoom = 1; }
+    if (mode === 'court') { score = 0; made = 0; tries = 0; hudText(); newBall(true); setMoving(false); setOrbit(false); oYaw = oPitch = 0; oZoom = 1; }
     else { yaw = pitch = vYaw = vPitch = 0; zoom = 1; spin = false; bSpin.setAttribute('aria-pressed', false); }
   });
   function setMode(m) {
     mode = m; aim = null; aimDots && (aimDots.visible = false);
     if (m === 'court') {
       newBall(true); spin = false; bSpin.setAttribute('aria-pressed', false); setMoving(false); setOrbit(false); oYaw = oPitch = 0; oZoom = 1;
-      bMode.textContent = 'Volver al logo'; bMode.classList.remove('primary'); bSpin.hidden = true; bMove.hidden = false; bField.hidden = false; playerBox.hidden = false;
+      bMode.textContent = 'Ver logo'; bMode.classList.remove('primary'); bSpin.hidden = true; bShoot.hidden = false; bMove.hidden = false; bField.hidden = false; playerBox.hidden = false;
       sub.textContent = 'Arrastra hacia abajo para dar fuerza y a los lados para apuntar. Suelta para lanzar.';
       hud.hidden = false; hudText();
     } else {
-      setMoving(false); setOrbit(false); oYaw = oPitch = 0; oZoom = 1; bMode.textContent = 'Convertir en canasta'; bMode.classList.add('primary'); bSpin.hidden = false; bMove.hidden = true; bField.hidden = true; playerBox.hidden = true;
+      setMoving(false); setOrbit(false); oYaw = oPitch = 0; oZoom = 1; bMode.textContent = 'Convertir en canasta'; bMode.classList.add('primary'); bSpin.hidden = false; bShoot.hidden = true; bMove.hidden = true; bField.hidden = true; playerBox.hidden = true;
       sub.textContent = 'Arrastra para girar · pellizca o usa la rueda para acercar';
       hud.hidden = true;
     }
@@ -892,7 +1471,8 @@
       if (hd > lim2 && hd > 1e-4) { var push = 26 * (hd - lim2) * dt; v.x -= p.x / hd * push; v.z -= p.z / hd * push; }
     }
     if (!ball.scored && prevY > H && p.y <= H && Math.hypot(p.x, p.z) < RIM - 0.1) {   // canasta
-      ball.scored = true; score++; netSway = 1; hudText(); showToast();
+      ball.scored = true; ball.scoreT = 0; score += ball.pts; made++; netSway = 1; hudText();
+      document.getElementById('tMain').textContent = ball.pts === 2 ? '¡Triple! +2' : '¡Canasta! +1'; showToast();
       document.getElementById('hHint').textContent = 'Arrastra hacia abajo y suelta para lanzar';
     }
   }
@@ -976,6 +1556,8 @@
     player.visible = pShadow.visible = showP;
     ballMesh.visible = shadow.visible = live;
     var off = 0;
+    if (acad.on && live) updateAcad(dt, time, seg01(u, 0.8, 1));
+    else {
     if (live) {
       var holding = ball.state === 'ready' || ball.state === 'windup';
       if (ball.state === 'windup') {
@@ -986,6 +1568,12 @@
         bodyOff = off;
         if (wt >= 0.28) {                          // suelta el balón
           ball.p.copy(ball.hp); ball.p.y = HOLD_Y + JUMP; ball.v.copy(ball.pend);
+          ball.pts = Math.hypot(ball.spawnX, ball.spawnZ) >= R3 ? 2 : 1;   // como en el 3x3: triple = 2, normal = 1
+          var cf = contestFactor();
+          if (cf > 0) {                                  // defensa encima: el tiro sale peor
+            var ea = (Math.random() * 2 - 1) * 0.1 * cf, es = 1 + (Math.random() * 2 - 1) * 0.07 * cf, vx0 = ball.v.x, vz0 = ball.v.z;
+            ball.v.x = (vx0 * Math.cos(ea) + vz0 * Math.sin(ea)) * es; ball.v.z = (-vx0 * Math.sin(ea) + vz0 * Math.cos(ea)) * es; ball.v.y *= es;
+          }
           ball.state = 'flying'; ball.t = 0; ball.rel = 0; acc = 0; holding = false;
           tries++; hudText();
         }
@@ -1003,13 +1591,16 @@
         var steps = 0;
         while (acc >= 1 / 240 && steps < 30) { physics(1 / 240); acc -= 1 / 240; steps++; }
         ball.t += dt; ball.rel += dt;
-        var q = ball.rel / 0.35; off = q < 1 ? JUMP * (1 - q * q) : 0; bodyOff = off;
+        var q = ball.rel / 0.6; off = q < 1 ? JUMP * (1 - q * q) : 0; bodyOff = off;
         ballMesh.position.copy(ball.p); ballMesh.scale.setScalar(RB);
         ballMesh.rotation.x -= dt * ball.v.length() * 0.35;
         ballMesh.rotation.z += dt * ball.v.x * 0.3;
         var speed = ball.v.length(), onFloor = ball.p.y <= RB + 0.002;
         if (onFloor && speed < 0.7) ball.rest += dt; else ball.rest = 0;
-        if (ball.rest > 0.8 || ball.t > 9 || Math.abs(ball.p.x) > 25 || ball.p.z < -22 || ball.p.z > 30) {
+        if (onFloor && ball.land < 0) ball.land = 0;
+        if (ball.land >= 0) ball.land += dt;
+        if (ball.scored) ball.scoreT += dt;
+        if (ball.rest > 0.2 || ball.land > 0.5 || (ball.scored && ball.scoreT > 0.9) || ball.t > 5 || Math.abs(ball.p.x) > 25 || ball.p.z < -22 || ball.p.z > 30) {
           newBall(false); document.getElementById('hHint').textContent = 'Arrastra hacia abajo y suelta para lanzar';
         }
       }
@@ -1031,18 +1622,33 @@
       armL.visible = armR.visible = handL.visible = handR.visible = armsOn;
       if (armsOn) updateArms(dt, off); else handInit = false;
     } else { armL.visible = armR.visible = handL.visible = handR.visible = false; handInit = false; }
+    }
+    updateDefender(dt, time, showP ? seg01(u, 0.8, 1) : 0, live);
     netSway *= Math.pow(0.35, dt);
     if (court.visible) updateNet(time);
 
     /* cámara */
     var ko = 1 - Math.exp(-dt * 10);
     cYaw += (oYaw - cYaw) * ko; cPitch += (oPitch - cPitch) * ko; cZoom += (oZoom - cZoom) * ko;
-    var r0 = Math.hypot(1.1, courtZ), phi0 = Math.atan2(1.1, courtZ);
+    var r0 = Math.hypot(CAMH, courtZ), phi0 = Math.atan2(CAMH, courtZ);
     var phi = Math.max(0.03, Math.min(1.2, phi0 + cPitch)), rr = r0 / cZoom;
     camLogo.set(0, 0.1, logoDist / zoom);
-    camCourt.set(Math.sin(cYaw) * Math.cos(phi) * rr, 3.3 + Math.sin(phi) * rr, Math.cos(cYaw) * Math.cos(phi) * rr);
-    camera.position.lerpVectors(camLogo, camCourt, e);
-    tgt.set(0, 3.3 * e, 0);
+    var ow = Math.min(1, Math.abs(Math.sin(cYaw * 0.5)) * 1.8);          // al girar, el pivote pasa a medio camino entre canasta y jugador
+    var needR = (Math.hypot(player.position.x, player.position.z) + 4.6) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect);
+    rr += (Math.max(rr, needR) - rr) * ow;                                // y se aleja lo justo para que quepan los dos
+    cPx += (player.position.x * 0.5 * ow - cPx) * ko; cPz += (player.position.z * 0.5 * ow - cPz) * ko;
+    camCourt.set(cPx + Math.sin(cYaw) * Math.cos(phi) * rr, 2.8 + Math.sin(phi) * rr, cPz + Math.cos(cYaw) * Math.cos(phi) * rr);
+    if (acad.on) {                                                       // cámara de la Academia: gira alrededor de la secuencia
+      var aphi = Math.max(0.05, Math.min(1.35, 0.4 + cPitch)), arr = 15.5 / cZoom;
+      camCourt.set(Math.sin(cYaw) * Math.cos(aphi) * arr, 1.7 + Math.sin(aphi) * arr, acad.midZ + Math.cos(cYaw) * Math.cos(aphi) * arr);
+      camera.position.lerpVectors(camLogo, camCourt, e); tgt.set(0, 1.7 * e, acad.midZ * e);
+      var vw = stage.clientWidth, vh = stage.clientHeight, sh = document.querySelector('.acad-sheet'), side = window.matchMedia('(orientation: landscape) and (min-width: 700px)').matches, mn = sh && sh.classList.contains('min');
+      camera.setViewOffset(vw, vh, side ? (mn ? 0 : Math.min(vw * 0.16, 170)) : 0, side ? 0 : vh * (mn ? 0.05 : 0.16), vw, vh);
+    } else {
+      if (camera.view && camera.view.enabled) camera.clearViewOffset();
+      camera.position.lerpVectors(camLogo, camCourt, e);
+      tgt.set(cPx * e, 2.8 * e, cPz * e);
+    }
     camera.lookAt(tgt);
     renderer.render(scene, camera);
     requestAnimationFrame(frame);
@@ -1050,5 +1656,207 @@
 
   try { build(); requestAnimationFrame(frame); }
   catch (err) { loading.hidden = false; loading.textContent = 'No se pudo preparar la escena 3D: ' + (err && err.message ? err.message : err); }
+})();
+</script>
+
+<div class="acad" id="acad" role="dialog" aria-label="Academia" hidden>
+  <div class="acflash" id="acFlash" hidden></div>
+  <div class="acad-sheet">
+    <div class="acad-top"><h2>Academia · Ejercicios</h2><span class="tb"><button id="acMin" type="button" aria-label="Ocultar o mostrar el panel" aria-pressed="false">Ocultar</button><button id="acClose" type="button">Cerrar</button></span></div>
+    <div class="seg" role="group" aria-label="Ejercicio">
+      <button id="acB0" type="button" aria-pressed="true">Paso 0</button>
+      <button id="acT4" type="button" aria-pressed="false">Pases</button>
+      <button id="acT5" type="button" aria-pressed="false">Pivotes</button>
+    </div>
+    <div class="seg" id="acSub" role="group" aria-label="Sección del paso 0">
+      <button id="acT1" type="button" aria-pressed="true">Regla</button>
+      <button id="acT2" type="button" aria-pressed="false">Jugadas</button>
+      <button id="acT3" type="button" aria-pressed="false">Test</button>
+    </div>
+    <div id="acBody" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+</div>
+<script>
+(function () {
+  var wrap = document.getElementById('acad'), body = document.getElementById('acBody');
+  var tabBtns = [document.getElementById('acT1'), document.getElementById('acT2'), document.getElementById('acT3'), document.getElementById('acT4'), document.getElementById('acT5')];
+  var LAB = { B: 'Bote', G: 'Paso 0 · recoge', '1': 'Paso 1', '2': 'Paso 2', '3': 'Paso 3', S: 'Tiro', D: 'Bote otra vez', R: 'Recibe el pase' };
+  var PLAYS = [
+    { t: 'BBBG12S', a: 'legal', why: 'Recoge el balón (paso 0, no cuenta), da el paso 1 y el 2 y lanza. Dos pasos tras recoger: legal.' },
+    { t: 'BBG123S', a: 'pasos', why: 'Después del paso 0 solo se permiten 2 pasos. El tercero es pasos.' },
+    { t: 'BBG1S', a: 'legal', why: 'Tras recoger, con un paso (o con dos) se puede lanzar. Legal.' },
+    { t: 'BG12DS', a: 'dobles', why: 'Una vez que recoges el balón ya no puedes volver a botar: eso son dobles.' },
+    { t: 'RG12S', a: 'legal', why: 'Al recibir un pase en carrera, el primer apoyo es el paso 0. Luego 1 y 2 y tiro: legal.' },
+    { t: 'RG123S', a: 'pasos', why: 'Paso 0 al recibir, más tres pasos: pasos.' },
+    { t: 'BBBBG12S', a: 'legal', why: 'Los botes antes de recoger no cuentan como pasos: puedes avanzar cuanto quieras botando. Después, 0, 1, 2 y tiro.' }
+  ];
+  var QUIZ = [
+    { q: '¿Qué es el paso cero?', o: ['El apoyo en el que recoges el balón al acabar el bote; no cuenta', 'El primer paso después de recoger el balón', 'Un paso que se da sin balón'], a: 0, why: 'El paso cero es el apoyo en el que el balón queda en tus manos al terminar el bote o al recibir. Es el punto de partida y no se cuenta.' },
+    { q: 'Después del paso cero, ¿cuántos pasos puedes dar antes de lanzar o pasar?', o: ['1', '2', '3'], a: 1, why: 'Dos pasos (el 1 y el 2). Al tercero, pasos.' },
+    { q: '¿Cuenta el paso cero como uno de los dos pasos?', o: ['Sí, es el primero', 'No', 'Solo si caes con los dos pies'], a: 1, why: 'No cuenta. Por eso se dice "cero, uno, dos".' },
+    { q: 'Recoges, das dos pasos y vuelves a botar. ¿Qué pita el árbitro?', o: ['Nada, es legal', 'Pasos', 'Dobles'], a: 2, why: 'Tras recoger el balón no puedes volver a botar: dobles.' },
+    { q: 'Antes de recoger el balón, ¿puedes avanzar botando?', o: ['Sí, mientras sigas botando', 'No, solo dos pasos', 'Solo tres pasos'], a: 0, why: 'Mientras botas no hay límite de pasos; el límite empieza al recoger.' }
+  ];
+
+  var slow = false, A = window.BBAcad3D;
+  function labOf(c) { return c === 'G' ? 'Paso 0 · recoge · pie ' + (A.hand() === 'L' ? 'dcho.' : 'izq.') : LAB[c]; }
+  function chipHtml(list) { return list.map(function (c) { return '<span class="' + (c.k === 'G' ? 'z' : c.k === '3' ? 'bad' : '') + '">' + c.l + '</span>'; }).join(''); }
+  function tokList(tokens, upto) { var r = []; for (var i = 0; i <= upto; i++) r.push({ k: tokens.charAt(i), l: labOf(tokens.charAt(i)) }); return r; }
+  var flashT = 0;
+  window.addEventListener('bbgather', function (e) {
+    var f = document.getElementById('acFlash'); if (!f) return;
+    f.textContent = '¡Paso 0! Pie ' + e.detail.foot + ' apoyado y balón en las manos'; f.hidden = false;
+    clearTimeout(flashT); flashT = setTimeout(function () { f.hidden = true; }, 1500);
+  });
+  var pivT; window.addEventListener('bbpivot', function (e) {
+    var f = document.getElementById('acFlash'); if (!f) return;
+    f.textContent = e.detail.txt; f.hidden = false; clearTimeout(pivT); pivT = setTimeout(function () { f.hidden = true; }, 1100);
+  });
+  function stopAnim() { var fl = document.getElementById('acFlash'); if (fl) fl.hidden = true; if (A) A.stop(); }
+  function slowBtn() { return '<button type="button" id="acSlow" aria-pressed="' + slow + '">Cámara lenta</button><button type="button" id="acHand" aria-pressed="' + (A.hand() === 'L') + '">Bota con la izquierda</button>'; }
+  function bindSlow() { var hb = document.getElementById('acHand'); if (hb) hb.onclick = function () { var l = A.hand() !== 'L'; A.hand(l ? 'L' : 'R'); hb.setAttribute('aria-pressed', l); }; var b = document.getElementById('acSlow'); if (b) b.onclick = function () { slow = !slow; b.setAttribute('aria-pressed', slow); A.speed(slow ? 0.45 : 1); }; }
+  var HINT = '<p class="acn">Arrastra sobre el campo para girar y ver al jugador desde otros ángulos · pellizca para acercar</p>';
+
+  function viewRule() {
+    stopAnim();
+    body.innerHTML = HINT + '<div class="acchips" id="acChips"></div><div class="acopts">' + slowBtn() + '</div>' +
+      '<ol class="acs"><li><b>Mientras botas</b> puedes avanzar sin límite de pasos.</li>' +
+      '<li><b>Paso cero:</b> es el apoyo en el que recoges el balón con las manos al acabar el bote (o al recibir un pase en carrera). <b>No cuenta</b> como paso. Mira el disco naranja del suelo.</li>' +
+      '<li><b>¿Con qué pie?</b> Si botas con la <b>derecha</b>, recoges el balón al apoyar el pie <b>izquierdo</b> (ese es el paso 0), y el 1 es con el derecho. Si botas con la <b>izquierda</b>, el paso 0 es el pie <b>derecho</b>. Prueba el botón de abajo.</li>' +
+      '<li>Después puedes dar <b>dos pasos</b> (el 1 y el 2) y debes lanzar o pasar. Un tercer paso es <b>pasos</b>.</li>' +
+      '<li>Una vez recogido el balón <b>no puedes volver a botar</b>: serían <b>dobles</b>.</li></ol>' +
+      '<p class="acn">Resumen: bote → recoge (0) → 1 → 2 → tiro. Los criterios pueden variar según la categoría y el árbitro; pregunta siempre a tu entrenador.</p>';
+    bindSlow();
+    var ch = document.getElementById('acChips'), tk = PLAYS[0].t;
+    A.speed(slow ? 0.45 : 1);
+    A.play(tk, { loop: true, onTok: function (i) { ch.innerHTML = chipHtml(tokList(tk, i)); } });
+  }
+
+  var pi = 0, pScore = 0, pDone = false;
+  function viewPlays(reset) {
+    stopAnim();
+    if (reset) { pi = 0; pScore = 0; }
+    if (pi >= PLAYS.length) {
+      var best = 0; try { best = Math.max(+localStorage.getItem('bb_acad_p') || 0, pScore); localStorage.setItem('bb_acad_p', best); } catch (e) {}
+      body.innerHTML = '<div class="acq">¡Terminado! Aciertos: ' + pScore + ' / ' + PLAYS.length + '</div><p class="acn">Mejor marca: ' + best + ' / ' + PLAYS.length + '</p><div class="acopts"><button id="acAgain" type="button" class="primary">Repetir las jugadas</button></div>';
+      document.getElementById('acAgain').onclick = function () { viewPlays(true); };
+      return;
+    }
+    var pl = PLAYS[pi]; pDone = false;
+    body.innerHTML = '<div class="acn">Jugada ' + (pi + 1) + ' de ' + PLAYS.length + ' · Aciertos ' + pScore + ' · gira el campo con el dedo</div><div class="acchips" id="acChips"></div>' +
+      '<div class="acq">¿Qué pita el árbitro?</div><div class="acopts"><button type="button" data-a="legal">Legal</button><button type="button" data-a="pasos">Pasos</button><button type="button" data-a="dobles">Dobles</button></div>' +
+      '<div class="acopts"><button type="button" id="acRep">Ver otra vez</button>' + slowBtn() + '</div><div id="acFb"></div>';
+    var ch = document.getElementById('acChips');
+    function play() { A.stop(); ch.innerHTML = ''; A.speed(slow ? 0.45 : 1); A.play(pl.t, { onTok: function (i) { ch.innerHTML = chipHtml(tokList(pl.t, i)); } }); }
+    play(); bindSlow();
+    document.getElementById('acRep').onclick = play;
+    Array.prototype.forEach.call(body.querySelectorAll('[data-a]'), function (b) {
+      b.onclick = function () {
+        if (pDone) return; pDone = true;
+        var ok = b.getAttribute('data-a') === pl.a; if (ok) pScore++;
+        var nm = { legal: 'Legal', pasos: 'Pasos', dobles: 'Dobles' }[pl.a];
+        document.getElementById('acFb').innerHTML = '<div class="acfb ' + (ok ? 'ok' : 'no') + '"><b>' + (ok ? '¡Correcto!' : 'No: era ' + nm + '.') + '</b> ' + pl.why + '</div><div class="acopts"><button type="button" id="acNext" class="primary">' + (pi + 1 < PLAYS.length ? 'Siguiente jugada' : 'Ver resultado') + '</button></div>';
+        document.getElementById('acNext').onclick = function () { pi++; viewPlays(); };
+        body.parentNode.scrollTop = body.parentNode.scrollHeight;
+      };
+    });
+  }
+
+  var qi = 0, qScore = 0, qDone = false;
+  function viewQuiz(reset) {
+    stopAnim();
+    if (reset) { qi = 0; qScore = 0; }
+    if (qi >= QUIZ.length) {
+      var best = 0; try { best = Math.max(+localStorage.getItem('bb_acad_q') || 0, qScore); localStorage.setItem('bb_acad_q', best); } catch (e) {}
+      body.innerHTML = '<div class="acq">Test terminado: ' + qScore + ' / ' + QUIZ.length + '</div><p class="acn">Mejor marca: ' + best + ' / ' + QUIZ.length + '</p><div class="acopts"><button id="acAgain" type="button" class="primary">Repetir el test</button></div>';
+      document.getElementById('acAgain').onclick = function () { viewQuiz(true); };
+      return;
+    }
+    var q = QUIZ[qi]; qDone = false;
+    body.innerHTML = '<div class="acn">Pregunta ' + (qi + 1) + ' de ' + QUIZ.length + ' · Aciertos ' + qScore + '</div><div class="acq">' + q.q + '</div><div class="acopts v">' +
+      q.o.map(function (t, i) { return '<button type="button" data-i="' + i + '">' + t + '</button>'; }).join('') + '</div><div id="acFb"></div>';
+    Array.prototype.forEach.call(body.querySelectorAll('[data-i]'), function (b) {
+      b.onclick = function () {
+        if (qDone) return; qDone = true;
+        var ok = +b.getAttribute('data-i') === q.a; if (ok) qScore++;
+        document.getElementById('acFb').innerHTML = '<div class="acfb ' + (ok ? 'ok' : 'no') + '"><b>' + (ok ? '¡Correcto!' : 'Respuesta: ' + q.o[q.a]) + '</b> ' + q.why + '</div><div class="acopts"><button type="button" id="acNext" class="primary">' + (qi + 1 < QUIZ.length ? 'Siguiente' : 'Ver resultado') + '</button></div>';
+        document.getElementById('acNext').onclick = function () { qi++; viewQuiz(); };
+        body.parentNode.scrollTop = body.parentNode.scrollHeight;
+      };
+    });
+  }
+
+  var PASSES = {
+    chest: { n: 'Pase de pecho', pts: ['El balón sale desde la altura del <b>pecho</b>, con los <b>codos pegados al tronco</b> (ni muy abiertos ni muy cerrados).', 'Da un <b>paso hacia el receptor</b> y extiende los brazos; al final, gira las muñecas (los pulgares quedan hacia abajo) y da un <b>golpe seco</b> al balón.', 'El balón va en <b>línea recta</b> al pecho del compañero, con un ligero giro hacia atrás.'] },
+    bounce: { n: 'Pase picado', pts: ['Misma mecánica que el de pecho, pero los brazos se dirigen <b>hacia el suelo</b>.', 'El balón bota <b>a unos dos tercios de la distancia</b> (más cerca del receptor) y le llega a la altura de la <b>cintura</b>.', 'Sirve para pasar por debajo de un defensor con los brazos abiertos.'] },
+    over: { n: 'Pase sobre la cabeza', pts: ['El balón sale desde <b>encima de la cabeza</b>, con los dos brazos.', 'Extensión completa de los brazos y <b>golpe de muñeca</b>; los dedos quedan apuntando hacia donde queremos pasar.', 'Es el pase para distancias largas o por encima del defensor.'] }
+  };
+  var passType = 'chest', passManual = false, passGiro = false;
+  function viewPass() {
+    stopAnim();
+    var P = PASSES[passType];
+    body.innerHTML = '<p class="acn">Siempre dos jugadores: <b>el que pasa</b> (tu jugador) y <b>el que recibe</b>.</p>' +
+      '<div class="acopts">' + Object.keys(PASSES).map(function (k) { return '<button type="button" data-p="' + k + '" aria-pressed="' + (k === passType) + '">' + PASSES[k].n + '</button>'; }).join('') + '</div>' +
+      '<div class="acopts"><button type="button" id="acDemo" aria-pressed="' + !passManual + '">Demostración</button><button type="button" id="acMine" aria-pressed="' + passManual + '">Hazlo tú</button>' +
+      (passManual ? '<button type="button" id="acGiro" aria-pressed="' + passGiro + '">Girar campo</button>' : '') + '</div>' +
+      (passManual ? '<p class="acn"><b>Arrastra hacia abajo sobre el campo</b> (como en el tiro) para echar atrás al jugador y <b>suelta</b> para pasar. Cuanto más arrastras, más fuerte sale el pase.</p>' : '') +
+      '<div class="acq">' + P.n + '</div><ol class="acs">' + P.pts.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol>' +
+      '<p class="acn"><b>El receptor:</b> ofrece las manos como blanco, mira el balón hasta que llega y lo recoge hacia el pecho para amortiguarlo.</p>' +
+      '<div class="acopts">' + (passManual ? '' : '<button type="button" id="acRep">Ver otra vez</button>') + slowBtn() + '</div>';
+    bindSlow();
+    function go() { A.stop(); A.speed(slow ? 0.45 : 1); A.playPass(passType, { loop: true, manual: passManual }); A.passOrbit(passManual && passGiro); }
+    go();
+    var rp = document.getElementById('acRep'); if (rp) rp.onclick = go;
+    document.getElementById('acDemo').onclick = function () { passManual = false; viewPass(); };
+    document.getElementById('acMine').onclick = function () { passManual = true; viewPass(); };
+    var gi = document.getElementById('acGiro'); if (gi) gi.onclick = function () { passGiro = !passGiro; gi.setAttribute('aria-pressed', passGiro); A.passOrbit(passGiro); };
+    Array.prototype.forEach.call(body.querySelectorAll('[data-p]'), function (b) { b.onclick = function () { passType = b.getAttribute('data-p'); viewPass(); }; });
+  }
+
+  var PIVS = {
+    comp: { n: 'La brújula', pts: ['Apoya el <b>pie de pivote</b> (círculo naranja) y gira <b>un cuarto de vuelta cada vez</b>: <b>Norte → Este → Sur → Oeste</b>.', 'Después hazlo <b>al contrario</b>: Oeste → Sur → Este → Norte, sin mover nunca el pie de pivote.', 'Piernas muy abiertas y flexionadas, y el balón protegido a la altura del pecho.'] },
+    front: { n: 'Giro de frente', pts: ['Fija el <b>pie de pivote</b> (círculo naranja): <b>no se levanta ni se arrastra</b>, solo gira sobre la punta.', 'El <b>pie libre pasa por delante</b> y todo el cuerpo gira con la <b>cadera y el tronco</b>, con las piernas flexionadas.', 'Protege el balón con el cuerpo, a la altura del pecho, y mira el aro.'] },
+    back: { n: 'Giro de espaldas', pts: ['El pie de pivote sigue <b>clavado</b> en el suelo.', 'El <b>pie libre va hacia atrás</b> y el cuerpo gira dando la espalda a la jugada: es el giro más lento pero protege mejor.', 'Mantén las piernas separadas y flexionadas para tener equilibrio.'] }
+  };
+  var pivType = 'comp', pivFoot = 'L';
+  function viewPiv() {
+    stopAnim();
+    var P = PIVS[pivType];
+    body.innerHTML = '<p class="acn">El <b>pie de pivote</b> (círculo naranja) no se mueve del sitio; el otro, el <b>pie libre</b>, es el que da los pasos.</p>' +
+      '<div class="acopts">' + Object.keys(PIVS).map(function (k) { return '<button type="button" data-v="' + k + '" aria-pressed="' + (k === pivType) + '">' + PIVS[k].n + '</button>'; }).join('') + '</div>' +
+      '<div class="acopts"><button type="button" id="acPL" aria-pressed="' + (pivFoot === 'L') + '">Pivota con la izquierda</button><button type="button" id="acPR" aria-pressed="' + (pivFoot === 'R') + '">Pivota con la derecha</button></div>' +
+      '<div class="acq">' + P.n + '</div><ol class="acs">' + P.pts.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol>' +
+      '<div class="acopts"><button type="button" id="acSlow" aria-pressed="' + slow + '">Cámara lenta</button></div>';
+    bindSlow();
+    A.stop(); A.speed(slow ? 0.45 : 1); A.playPivot(pivType, { foot: pivFoot });
+    document.getElementById('acPL').onclick = function () { pivFoot = 'L'; viewPiv(); };
+    document.getElementById('acPR').onclick = function () { pivFoot = 'R'; viewPiv(); };
+    Array.prototype.forEach.call(body.querySelectorAll('[data-v]'), function (b) { b.onclick = function () { pivType = b.getAttribute('data-v'); viewPiv(); }; });
+  }
+
+  var lastSub = 0, blk0 = document.getElementById('acB0'), subSeg = document.getElementById('acSub');
+  function tab(n) {
+    if (n < 3) lastSub = n;
+    tabBtns.forEach(function (b, i) { b.setAttribute('aria-pressed', i === n); });
+    blk0.setAttribute('aria-pressed', n < 3); subSeg.hidden = n >= 3;
+    if (n === 0) viewRule(); else if (n === 1) viewPlays(true); else if (n === 2) viewQuiz(true); else if (n === 3) viewPass(); else viewPiv();
+    body.parentNode.scrollTop = 0;
+  }
+  tabBtns.forEach(function (b, i) { b.addEventListener('click', function () { tab(i); }); });
+  blk0.addEventListener('click', function () { tab(lastSub); });
+  var isOpen = false;
+  function openA() {
+    if (isOpen) { closeA(); return; }
+    isOpen = true; wrap.hidden = false; document.querySelector('.acad-sheet').classList.remove('min'); document.getElementById('acMin').textContent = 'Ocultar'; body.innerHTML = '<p class="acn">Preparando la pista…</p>';
+    lastSub = 0; tabBtns.forEach(function (b, i) { b.setAttribute('aria-pressed', i === 0); });
+    A.enter(function () { tab(0); });
+    document.getElementById('acClose').focus();
+  }
+  function closeA() { if (!isOpen) return; isOpen = false; A.stop(); wrap.hidden = true; A.exit(); document.getElementById('bAcad').focus(); }
+  document.getElementById('bAcad').addEventListener('click', openA);
+  document.getElementById('acClose').addEventListener('click', closeA);
+  var minB = document.getElementById('acMin');
+  minB.addEventListener('click', function () { var sh = document.querySelector('.acad-sheet'), m = sh.classList.toggle('min'); minB.textContent = m ? 'Mostrar' : 'Ocultar'; minB.setAttribute('aria-pressed', m); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen) closeA(); });
 })();
 </script>
